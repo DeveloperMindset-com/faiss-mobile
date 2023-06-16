@@ -20,6 +20,7 @@ Latest supported version of FAISS is [1.7.4](https://github.com/facebookresearch
 
 ## Requirements
 
+- Git [LFS](https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)
 - Xcode (including multiple `platforms`)
 - LLVM with Clang
 - Homebrew
