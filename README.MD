@@ -32,6 +32,7 @@ Latest supported version of FAISS is [1.7.4](https://github.com/facebookresearch
 - ruby (for Cocoapods)
 - carthage
 - swift
+- [OpenMP](https://github.com/eugenehp/openmp-mobile)
 
 ## Why
 
