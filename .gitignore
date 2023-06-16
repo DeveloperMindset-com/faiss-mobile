@@ -1,0 +1,8 @@
+.DS_Store
+build
+xcframeworks
+*.app
+node_modules
+package-lock.json
+logs
+dist/openmp.xcframework
