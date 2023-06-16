@@ -7,7 +7,7 @@ Pod::s.new do |s|
   s.homepage           = "https://reactivelions.com/faiss/"
   s.documentation_url  = "https://github.com/eugenehp/faiss-mobile"
   s.author             = { "Eugene Hauptmann" => "eugene@reactivelions.com" }
-  s.source             = { :git => 'https://github.com/eugenehp/daiss-mobile.git', :tag => "v#{version}" }
+  s.source             = { :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => "v#{version}" }
   s.license            = { :type => 'MIT', :file => 'LICENSE' }
 
   s.requires_arcmulti  = false
