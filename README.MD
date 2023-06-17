@@ -165,6 +165,213 @@ dist/faiss.xcframework
 106 directories, 7 files
 ```
 
+## faiss_c.xcframework
+
+A C only version, without C++ dependency is inside `faiss_c.xcframework`.
+
+```shell
+dist/faiss_c.xcframework
+├── Info.plist
+├── ios-arm64_arm64e
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+├── ios-arm64_arm64e_x86_64-simulator
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+├── macos-arm64_arm64e_x86_64
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+├── tvos-arm64
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+├── tvos-x86_64-simulator
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+├── watchos-arm64_32_armv7k
+│   ├── Headers
+│   │   ├── AutoTune_c.h
+│   │   ├── Clustering_c.h
+│   │   ├── IndexBinary_c.h
+│   │   ├── IndexFlat_c.h
+│   │   ├── IndexIVFFlat_c.h
+│   │   ├── IndexIVF_c.h
+│   │   ├── IndexLSH_c.h
+│   │   ├── IndexPreTransform_c.h
+│   │   ├── IndexReplicas_c.h
+│   │   ├── IndexScalarQuantizer_c.h
+│   │   ├── IndexShards_c.h
+│   │   ├── Index_c.h
+│   │   ├── MetaIndexes_c.h
+│   │   ├── VectorTransform_c.h
+│   │   ├── clone_index_c.h
+│   │   ├── error_c.h
+│   │   ├── error_impl.h
+│   │   ├── faiss_c.h
+│   │   ├── impl
+│   │   │   └── AuxIndexStructures_c.h
+│   │   ├── index_factory_c.h
+│   │   ├── index_io_c.h
+│   │   ├── macros_impl.h
+│   │   └── utils
+│   │       └── distances_c.h
+│   └── libfaiss_c.a
+└── watchos-i386-simulator
+    ├── Headers
+    │   ├── AutoTune_c.h
+    │   ├── Clustering_c.h
+    │   ├── IndexBinary_c.h
+    │   ├── IndexFlat_c.h
+    │   ├── IndexIVFFlat_c.h
+    │   ├── IndexIVF_c.h
+    │   ├── IndexLSH_c.h
+    │   ├── IndexPreTransform_c.h
+    │   ├── IndexReplicas_c.h
+    │   ├── IndexScalarQuantizer_c.h
+    │   ├── IndexShards_c.h
+    │   ├── Index_c.h
+    │   ├── MetaIndexes_c.h
+    │   ├── VectorTransform_c.h
+    │   ├── clone_index_c.h
+    │   ├── error_c.h
+    │   ├── error_impl.h
+    │   ├── faiss_c.h
+    │   ├── impl
+    │   │   └── AuxIndexStructures_c.h
+    │   ├── index_factory_c.h
+    │   ├── index_io_c.h
+    │   ├── macros_impl.h
+    │   └── utils
+    │       └── distances_c.h
+    └── libfaiss_c.a
+
+29 directories, 169 files
+```
+
 ## Distribution
 
 This package is available using following package managers.
