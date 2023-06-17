@@ -34,6 +34,14 @@ set(FAISS_C_SRC
 add_library(faiss_c ${FAISS_C_SRC})
 target_link_libraries(faiss_c PRIVATE faiss)
 
+install(TARGETS faiss_c
+  EXPORT faiss-targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
 function(faiss_install_headers headers p)
   foreach(h ${headers})
     get_filename_component(f ${h} DIRECTORY)

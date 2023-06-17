@@ -2,7 +2,8 @@
 import PackageDescription
 
 let version = "1.7.4"
-let checksum = "6b67724ba59798c3b1f51c7c2293b56b5a14c6c3a342eeee763891a45ce32169"
+let checksum = "85526c0384812d1b3c113dabb67ee779afe9b5225a9a57fbe936298a610b6f86"
+let checksum_c = "85526c0384812d1b3c113dabb67ee779afe9b5225a9a57fbe936298a610b6f86"
  
 let package = Package(
     name: "FAISS",
@@ -13,6 +14,9 @@ let package = Package(
         .library(
             name: "FAISS",
             targets: ["FAISS"]),
+        .library(
+            name: "FAISS_C",
+            targets: ["FAISS_C"]),
     ],
     dependencies: [],
     targets: [
@@ -20,6 +24,11 @@ let package = Package(
             name: "FAISS",
             url: "https://github.com/eugenehp/faiss-mobile/releases/download/v\(version)/faiss.xcframework.zip"
             checksum: checksum
+        ),
+        .binaryTarget(
+            name: "FAISS_C",
+            url: "https://github.com/eugenehp/faiss-mobile/releases/download/v\(version)/faiss_c.xcframework.zip"
+            checksum: checksum_c
         )
     ]
 )
