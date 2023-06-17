@@ -381,14 +381,17 @@ This package is available using following package managers.
 `./Pacakage.swift` points to remote release hosted on this GitHub repository.
 Use [these](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app) instructions to add this GitHub repository.
 
+SPM version points to both libraries `FAISS` in C++ and its C version `FAISS_C`.
+
 ### Cocoapods
 
-`./FAISS.podspec` includes all the specific details about the build.
+`./FAISS.podspec` and `./FAISS_C.podspec` include all the specific details about the build.
 
 In your `Podfile` you can add this library using this syntax:
 
 ```ruby
 pod 'FAISS', :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => 'v1.7.4'
+pod 'FAISS_C', :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => 'v1.7.4'
 ```
 
 ### Carthage
@@ -397,6 +400,12 @@ In `Cartfile` add following:
 
 ```ruby
 binary "https://raw.githubusercontent.com/eugenehp/faiss-mobile/master/carthage/faiss-static-xcframework.json" ~> 1.7.4
+```
+
+Slightly different for a C version:
+
+```ruby
+binary "https://raw.githubusercontent.com/eugenehp/faiss-mobile/master/carthage/faiss-c-static-xcframework.json" ~> 1.7.4
 ```
 
 ## Releases
@@ -412,6 +421,12 @@ To release a draft:
 ```shell
 ./faiss.sh release
 ```
+
+## Examples
+
+- `FAISS-Mac-Objective-C` [red more](/examples/FAISS-Mac-Objective-C/README.md).
+- `FAISS-Mac-Objective-C++` [red more](/examples/FAISS-Mac-Objective-C++/README.md).
+- `FAISS-iOS-Objective-C` [red more](/examples/FAISS-iOS-Objective-C/README.md).
 
 ## Contributing
 
