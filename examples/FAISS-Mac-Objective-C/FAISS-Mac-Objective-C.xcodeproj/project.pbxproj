@@ -1,0 +1,314 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4472A85C2A3D358A0044E90E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4472A85B2A3D358A0044E90E /* main.m */; };
+		4472A8652A3D35DD0044E90E /* openmp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4472A8632A3D35DD0044E90E /* openmp.xcframework */; };
+		4472A86B2A3D35E30044E90E /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4472A86A2A3D35E30044E90E /* Accelerate.framework */; };
+		44D398CF2A3D6844009A7732 /* faiss_c.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D398CE2A3D6844009A7732 /* faiss_c.xcframework */; settings = {ATTRIBUTES = (Required, ); }; };
+		44D398D92A3D6DB3009A7732 /* faiss.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 44D398D82A3D6DB3009A7732 /* faiss.xcframework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4472A8562A3D358A0044E90E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4472A8582A3D358A0044E90E /* FAISS-Mac-Objective-C */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FAISS-Mac-Objective-C"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4472A85B2A3D358A0044E90E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		4472A8632A3D35DD0044E90E /* openmp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = openmp.xcframework; path = ../../dist/openmp.xcframework; sourceTree = "<group>"; };
+		4472A86A2A3D35E30044E90E /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		44D398CE2A3D6844009A7732 /* faiss_c.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = faiss_c.xcframework; path = ../../dist/faiss_c.xcframework; sourceTree = "<group>"; };
+		44D398D82A3D6DB3009A7732 /* faiss.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = faiss.xcframework; path = ../../dist/faiss.xcframework; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4472A8552A3D358A0044E90E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44D398CF2A3D6844009A7732 /* faiss_c.xcframework in Frameworks */,
+				4472A86B2A3D35E30044E90E /* Accelerate.framework in Frameworks */,
+				44D398D92A3D6DB3009A7732 /* faiss.xcframework in Frameworks */,
+				4472A8652A3D35DD0044E90E /* openmp.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4472A84F2A3D358A0044E90E = {
+			isa = PBXGroup;
+			children = (
+				4472A85A2A3D358A0044E90E /* FAISS-Mac-Objective-C */,
+				4472A8592A3D358A0044E90E /* Products */,
+				4472A8622A3D35DD0044E90E /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		4472A8592A3D358A0044E90E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4472A8582A3D358A0044E90E /* FAISS-Mac-Objective-C */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4472A85A2A3D358A0044E90E /* FAISS-Mac-Objective-C */ = {
+			isa = PBXGroup;
+			children = (
+				4472A85B2A3D358A0044E90E /* main.m */,
+			);
+			path = "FAISS-Mac-Objective-C";
+			sourceTree = "<group>";
+		};
+		4472A8622A3D35DD0044E90E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				44D398D82A3D6DB3009A7732 /* faiss.xcframework */,
+				44D398CE2A3D6844009A7732 /* faiss_c.xcframework */,
+				4472A86A2A3D35E30044E90E /* Accelerate.framework */,
+				4472A8632A3D35DD0044E90E /* openmp.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4472A8572A3D358A0044E90E /* FAISS-Mac-Objective-C */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4472A85F2A3D358A0044E90E /* Build configuration list for PBXNativeTarget "FAISS-Mac-Objective-C" */;
+			buildPhases = (
+				4472A8542A3D358A0044E90E /* Sources */,
+				4472A8552A3D358A0044E90E /* Frameworks */,
+				4472A8562A3D358A0044E90E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FAISS-Mac-Objective-C";
+			productName = "FAISS-Mac-Objective-C";
+			productReference = 4472A8582A3D358A0044E90E /* FAISS-Mac-Objective-C */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4472A8502A3D358A0044E90E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4472A8572A3D358A0044E90E = {
+						CreatedOnToolsVersion = 14.3.1;
+					};
+				};
+			};
+			buildConfigurationList = 4472A8532A3D358A0044E90E /* Build configuration list for PBXProject "FAISS-Mac-Objective-C" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 4472A84F2A3D358A0044E90E;
+			productRefGroup = 4472A8592A3D358A0044E90E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4472A8572A3D358A0044E90E /* FAISS-Mac-Objective-C */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4472A8542A3D358A0044E90E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4472A85C2A3D358A0044E90E /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4472A85D2A3D358A0044E90E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4472A85E2A3D358A0044E90E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.3;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		4472A8602A3D358A0044E90E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				OTHER_CFLAGS = (
+					"-Xpreprocessor",
+					"-fopenmp",
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4472A8612A3D358A0044E90E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				OTHER_CFLAGS = (
+					"-Xpreprocessor",
+					"-fopenmp",
+				);
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4472A8532A3D358A0044E90E /* Build configuration list for PBXProject "FAISS-Mac-Objective-C" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4472A85D2A3D358A0044E90E /* Debug */,
+				4472A85E2A3D358A0044E90E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4472A85F2A3D358A0044E90E /* Build configuration list for PBXNativeTarget "FAISS-Mac-Objective-C" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4472A8602A3D358A0044E90E /* Debug */,
+				4472A8612A3D358A0044E90E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4472A8502A3D358A0044E90E /* Project object */;
+}
