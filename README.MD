@@ -424,9 +424,9 @@ To release a draft:
 
 ## Examples
 
-- `FAISS-Mac-Objective-C` [red more](/examples/FAISS-Mac-Objective-C/README.md).
-- `FAISS-Mac-Objective-C++` [red more](/examples/FAISS-Mac-Objective-C++/README.md).
-- `FAISS-iOS-Objective-C` [red more](/examples/FAISS-iOS-Objective-C/README.md).
+- `FAISS-Mac-Objective-C` [read more](/examples/FAISS-Mac-Objective-C/README.md).
+- `FAISS-Mac-Objective-C++` [read more](/examples/FAISS-Mac-Objective-C++/README.md).
+- `FAISS-iOS-Objective-C` [read more](/examples/FAISS-iOS-Objective-C/README.md).
 
 ## Contributing
 
