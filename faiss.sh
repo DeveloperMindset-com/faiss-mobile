@@ -164,6 +164,7 @@ function install()
     cmake --build $BUILD_DIR --target install
 }
 
+#XCODE 15 Error: "https://forums.swift.org/t/xcodebuild-create-xcframework-not-working-in-xcode-15-0/67439"
 function framework()
 {
     echo "Preparing framework for $NAME"
@@ -178,12 +179,12 @@ function framework()
 
     for PLATFORM in ${PLATFORMS[@]}; do
         OUTPUT="$ROOT/$BUILD/$NAME/install/$PLATFORM"
-        command+=" -library $OUTPUT/lib/libfaiss.a -headers $OUTPUT/include"
-        command_c+=" -library $OUTPUT/lib/libfaiss_c.a -headers $OUTPUT/include/faiss/c_api"
+        command+=" -library $(readlink -f "$OUTPUT/lib/libfaiss.a") -headers $(readlink -f "$OUTPUT/include")"
+        command_c+=" -library $(readlink -f "$OUTPUT/lib/libfaiss_c.a") -headers $(readlink -f "$OUTPUT/include/faiss/c_api")"
     done
 
-    command+=" -output $FRAMEWORK_OUTPUT"
-    command_c+=" -output $FRAMEWORK_C_OUTPUT"
+    command+=" -output $(readlink -f "$FRAMEWORK_OUTPUT")"
+    command_c+=" -output $(readlink -f "$FRAMEWORK_C_OUTPUT")"
 
     $command
     $command_c
@@ -191,7 +192,7 @@ function framework()
     ditto -c -k --sequesterRsrc --keepParent "$FRAMEWORK_OUTPUT" "$FRAMEWORK_OUTPUT.zip"
     ditto -c -k --sequesterRsrc --keepParent "$FRAMEWORK_C_OUTPUT" "$FRAMEWORK_C_OUTPUT.zip"
     # openssl dgst -sha256 "$XCFRAMEWORK_FOLDER.zip"
-    
+
     CHECKSUM=$(swift package compute-checksum "$FRAMEWORK_OUTPUT.zip")
     echo $CHECKSUM > $CHECKSUM_FILE
     echo "$NAME - $CHECKSUM"
