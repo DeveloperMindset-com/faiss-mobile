@@ -1,4 +1,4 @@
-Pod::s.new do |s|
+Pod::Spec.new do |s|
   version              = "1.7.4"
   s.name               = "FAISS_C"
   s.version            = "#{version}"
