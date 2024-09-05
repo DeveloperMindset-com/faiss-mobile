@@ -436,7 +436,7 @@ Contributions are welcome, feel free to submit an issue or open a pull request.
 
 [MIT](./LICENSE)
 
-Copyright © 2023 [Eugene Hauptmann](http://twitter.com/eugenehp)
+Copyright © 2023-2024 [Eugene Hauptmann](http://twitter.com/eugenehp)
 
 ## Legal
 
