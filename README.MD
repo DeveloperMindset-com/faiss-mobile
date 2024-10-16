@@ -32,7 +32,7 @@ Latest supported version of FAISS is [1.9.0](https://github.com/facebookresearch
 - ruby (for Cocoapods)
 - carthage
 - swift
-- [OpenMP](https://github.com/eugenehp/openmp-mobile)
+- [OpenMP](https://github.com/DeveloperMindset-com/openmp-mobile)
 
 ## Why
 
@@ -390,8 +390,8 @@ SPM version points to both libraries `FAISS` in C++ and its C version `FAISS_C`.
 In your `Podfile` you can add this library using this syntax:
 
 ```ruby
-pod 'FAISS', :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => 'v1.9.0'
-pod 'FAISS_C', :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => 'v1.9.0'
+pod 'FAISS', :git => 'https://github.com/DeveloperMindset-com/faiss-mobile.git', :tag => 'v1.9.0'
+pod 'FAISS_C', :git => 'https://github.com/DeveloperMindset-com/faiss-mobile.git', :tag => 'v1.9.0'
 ```
 
 ### Carthage
@@ -399,13 +399,13 @@ pod 'FAISS_C', :git => 'https://github.com/eugenehp/faiss-mobile.git', :tag => '
 In `Cartfile` add following:
 
 ```ruby
-binary "https://raw.githubusercontent.com/eugenehp/faiss-mobile/master/carthage/faiss-static-xcframework.json" ~> 1.9.0
+binary "https://raw.githubusercontent.com/DeveloperMindset-com/faiss-mobile/master/carthage/faiss-static-xcframework.json" ~> 1.9.0
 ```
 
 Slightly different for a C version:
 
 ```ruby
-binary "https://raw.githubusercontent.com/eugenehp/faiss-mobile/master/carthage/faiss-c-static-xcframework.json" ~> 1.9.0
+binary "https://raw.githubusercontent.com/DeveloperMindset-com/faiss-mobile/master/carthage/faiss-c-static-xcframework.json" ~> 1.9.0
 ```
 
 ## Releases
