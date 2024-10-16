@@ -6,6 +6,8 @@
 import os
 import numpy as np
 import faiss
+import getpass
+
 
 from .vecs_io import fvecs_read, ivecs_read, bvecs_mmap, fvecs_mmap
 from .exhaustive_search import knn
@@ -115,15 +117,22 @@ class SyntheticDataset(Dataset):
 # that directory is
 ############################################################################
 
+username = getpass.getuser()
 
 for dataset_basedir in (
         '/datasets01/simsearch/041218/',
-        '/mnt/vol/gfsai-flash3-east/ai-group/datasets/simsearch/'):
+        '/mnt/vol/gfsai-flash3-east/ai-group/datasets/simsearch/',
+        f'/home/{username}/simsearch/data/'):
     if os.path.exists(dataset_basedir):
         break
 else:
     # users can link their data directory to `./data`
     dataset_basedir = 'data/'
+
+
+def set_dataset_basedir(path):
+    global dataset_basedir
+    dataset_basedir = path
 
 
 class DatasetSIFT1M(Dataset):
@@ -311,6 +320,33 @@ class DatasetMusic100(Dataset):
             gt = gt[:, :k]
         return gt
 
+class DatasetGIST1M(Dataset):
+    """
+    The original dataset is available at: http://corpus-texmex.irisa.fr/
+    (ANN_SIFT1M)
+    """
+
+    def __init__(self):
+        Dataset.__init__(self)
+        self.d, self.nt, self.nb, self.nq = 960, 100000, 1000000, 10000
+        self.basedir = dataset_basedir + 'gist1M/'
+
+    def get_queries(self):
+        return fvecs_read(self.basedir + "gist_query.fvecs")
+
+    def get_train(self, maxtrain=None):
+        maxtrain = maxtrain if maxtrain is not None else self.nt
+        return fvecs_read(self.basedir + "gist_learn.fvecs")[:maxtrain]
+
+    def get_database(self):
+        return fvecs_read(self.basedir + "gist_base.fvecs")
+
+    def get_groundtruth(self, k=None):
+        gt = ivecs_read(self.basedir + "gist_groundtruth.ivecs")
+        if k is not None:
+            assert k <= 100
+            gt = gt[:, :k]
+        return gt
 
 
 def dataset_from_name(dataset='deep1M', download=False):
@@ -320,6 +356,9 @@ def dataset_from_name(dataset='deep1M', download=False):
 
     if dataset == 'sift1M':
         return DatasetSIFT1M()
+
+    elif dataset == 'gist1M':
+        return DatasetGIST1M()
 
     elif dataset.startswith('bigann'):
         dbsize = 1000 if dataset == "bigann1B" else int(dataset[6:-1])

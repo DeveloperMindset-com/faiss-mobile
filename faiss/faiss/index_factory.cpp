@@ -140,8 +140,12 @@ std::map<std::string, ScalarQuantizer::QuantizerType> sq_types = {
         {"SQ4", ScalarQuantizer::QT_4bit},
         {"SQ6", ScalarQuantizer::QT_6bit},
         {"SQfp16", ScalarQuantizer::QT_fp16},
+        {"SQbf16", ScalarQuantizer::QT_bf16},
+        {"SQ8_direct_signed", ScalarQuantizer::QT_8bit_direct_signed},
+        {"SQ8_direct", ScalarQuantizer::QT_8bit_direct},
 };
-const std::string sq_pattern = "(SQ4|SQ8|SQ6|SQfp16)";
+const std::string sq_pattern =
+        "(SQ4|SQ8|SQ6|SQfp16|SQbf16|SQ8_direct_signed|SQ8_direct)";
 
 std::map<std::string, AdditiveQuantizer::Search_type_t> aq_search_type = {
         {"_Nfloat", AdditiveQuantizer::ST_norm_float},
@@ -216,11 +220,24 @@ VectorTransform* parse_VectorTransform(const std::string& description, int d) {
         return new RemapDimensionsTransform(d, std::max(d_out, d), false);
     }
     return nullptr;
-};
+}
 
 /***************************************************************
  * Parse IndexIVF
  */
+
+size_t parse_nlist(std::string s) {
+    size_t multiplier = 1;
+    if (s.back() == 'k') {
+        s.pop_back();
+        multiplier = 1024;
+    }
+    if (s.back() == 'M') {
+        s.pop_back();
+        multiplier = 1024 * 1024;
+    }
+    return std::stoi(s) * multiplier;
+}
 
 // parsing guard + function
 Index* parse_coarse_quantizer(
@@ -236,8 +253,8 @@ Index* parse_coarse_quantizer(
     };
     use_2layer = false;
 
-    if (match("IVF([0-9]+)")) {
-        nlist = std::stoi(sm[1].str());
+    if (match("IVF([0-9]+[kM]?)")) {
+        nlist = parse_nlist(sm[1].str());
         return new IndexFlat(d, mt);
     }
     if (match("IMI2x([0-9]+)")) {
@@ -248,18 +265,18 @@ Index* parse_coarse_quantizer(
         nlist = (size_t)1 << (2 * nbit);
         return new MultiIndexQuantizer(d, 2, nbit);
     }
-    if (match("IVF([0-9]+)_HNSW([0-9]*)")) {
-        nlist = std::stoi(sm[1].str());
+    if (match("IVF([0-9]+[kM]?)_HNSW([0-9]*)")) {
+        nlist = parse_nlist(sm[1].str());
         int hnsw_M = sm[2].length() > 0 ? std::stoi(sm[2]) : 32;
         return new IndexHNSWFlat(d, hnsw_M, mt);
     }
-    if (match("IVF([0-9]+)_NSG([0-9]+)")) {
-        nlist = std::stoi(sm[1].str());
+    if (match("IVF([0-9]+[kM]?)_NSG([0-9]+)")) {
+        nlist = parse_nlist(sm[1].str());
         int R = std::stoi(sm[2]);
         return new IndexNSGFlat(d, R, mt);
     }
-    if (match("IVF([0-9]+)\\(Index([0-9])\\)")) {
-        nlist = std::stoi(sm[1].str());
+    if (match("IVF([0-9]+[kM]?)\\(Index([0-9])\\)")) {
+        nlist = parse_nlist(sm[1].str());
         int no = std::stoi(sm[2].str());
         FAISS_ASSERT(no >= 0 && no < parenthesis_indexes.size());
         return parenthesis_indexes[no].release();
@@ -440,11 +457,13 @@ IndexHNSW* parse_IndexHNSW(
     if (match("Flat|")) {
         return new IndexHNSWFlat(d, hnsw_M, mt);
     }
-    if (match("PQ([0-9]+)(np)?")) {
+
+    if (match("PQ([0-9]+)(x[0-9]+)?(np)?")) {
         int M = std::stoi(sm[1].str());
-        IndexHNSWPQ* ipq = new IndexHNSWPQ(d, M, hnsw_M);
+        int nbit = mres_to_int(sm[2], 8, 1);
+        IndexHNSWPQ* ipq = new IndexHNSWPQ(d, M, hnsw_M, nbit);
         dynamic_cast<IndexPQ*>(ipq->storage)->do_polysemous_training =
-                sm[2].str() != "np";
+                sm[3].str() != "np";
         return ipq;
     }
     if (match(sq_pattern)) {
@@ -490,11 +509,12 @@ IndexNSG* parse_IndexNSG(
     if (match("Flat|")) {
         return new IndexNSGFlat(d, nsg_R, mt);
     }
-    if (match("PQ([0-9]+)(np)?")) {
+    if (match("PQ([0-9]+)(x[0-9]+)?(np)?")) {
         int M = std::stoi(sm[1].str());
-        IndexNSGPQ* ipq = new IndexNSGPQ(d, M, nsg_R);
+        int nbit = mres_to_int(sm[2], 8, 1);
+        IndexNSGPQ* ipq = new IndexNSGPQ(d, M, nsg_R, nbit);
         dynamic_cast<IndexPQ*>(ipq->storage)->do_polysemous_training =
-                sm[2].str() != "np";
+                sm[3].str() != "np";
         return ipq;
     }
     if (match(sq_pattern)) {
@@ -523,11 +543,12 @@ Index* parse_other_indexes(
     }
 
     // IndexLSH
-    if (match("LSH(r?)(t?)")) {
-        bool rotate_data = sm[1].length() > 0;
-        bool train_thresholds = sm[2].length() > 0;
+    if (match("LSH([0-9]*)(r?)(t?)")) {
+        int nbits = sm[1].length() > 0 ? std::stoi(sm[1].str()) : d;
+        bool rotate_data = sm[2].length() > 0;
+        bool train_thresholds = sm[3].length() > 0;
         FAISS_THROW_IF_NOT(metric == METRIC_L2);
-        return new IndexLSH(d, d, rotate_data, train_thresholds);
+        return new IndexLSH(d, nbits, rotate_data, train_thresholds);
     }
 
     // IndexLattice
@@ -658,6 +679,24 @@ std::unique_ptr<Index> index_factory_sub(
     // for the current match
     std::smatch sm;
 
+    // IndexIDMap -- it turns out is was used both as a prefix and a suffix, so
+    // support both
+    if (re_match(description, "(.+),IDMap2", sm) ||
+        re_match(description, "IDMap2,(.+)", sm)) {
+        IndexIDMap2* idmap2 = new IndexIDMap2(
+                index_factory_sub(d, sm[1].str(), metric).release());
+        idmap2->own_fields = true;
+        return std::unique_ptr<Index>(idmap2);
+    }
+
+    if (re_match(description, "(.+),IDMap", sm) ||
+        re_match(description, "IDMap,(.+)", sm)) {
+        IndexIDMap* idmap = new IndexIDMap(
+                index_factory_sub(d, sm[1].str(), metric).release());
+        idmap->own_fields = true;
+        return std::unique_ptr<Index>(idmap);
+    }
+
     // handle refines
     if (re_match(description, "(.+),RFlat", sm) ||
         re_match(description, "(.+),Refine\\((.+)\\)", sm)) {
@@ -732,24 +771,6 @@ std::unique_ptr<Index> index_factory_sub(
                description.c_str(),
                parenthesis_indexes.size(),
                d);
-    }
-
-    // IndexIDMap -- it turns out is was used both as a prefix and a suffix, so
-    // support both
-    if (re_match(description, "(.+),IDMap2", sm) ||
-        re_match(description, "IDMap2,(.+)", sm)) {
-        IndexIDMap2* idmap2 = new IndexIDMap2(
-                index_factory_sub(d, sm[1].str(), metric).release());
-        idmap2->own_fields = true;
-        return std::unique_ptr<Index>(idmap2);
-    }
-
-    if (re_match(description, "(.+),IDMap", sm) ||
-        re_match(description, "IDMap,(.+)", sm)) {
-        IndexIDMap* idmap = new IndexIDMap(
-                index_factory_sub(d, sm[1].str(), metric).release());
-        idmap->own_fields = true;
-        return std::unique_ptr<Index>(idmap);
     }
 
     { // handle basic index types

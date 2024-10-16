@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 OPENMP_VERSION="16.0.5"
 OPENMP_URL="https://github.com/eugenehp/openmp-mobile/releases/download/v$OPENMP_VERSION/openmp.xcframework.zip"
@@ -6,7 +6,7 @@ OPENMP_XCFRAMEWORK="openmp.xcframework"
 
 NAME="faiss"
 NAME_C="faiss_c"
-VERSION="1.7.4"
+VERSION="1.9.0"
 DIST="dist"
 BUILD="build"
 BUILD_SHARED_LIBS=OFF
@@ -28,6 +28,12 @@ PARALLEL=OFF # ON|OFF
 # PLATFORMS=("OS64")
 # TRIPLES=("ios-arm64_arm64e")
 
+# SIMULATOR_VISIONOS
+# VISIONOSCOMBINED
+# VISIONOS
+# SIMULATORARM64_WATCHOS
+# WATCHOS
+
 TARGETS=("13.0" "13.0" "13.0" "6.0" "6.0" "13.0" "13.0" "13.0")
 ARCHS=("arm64;arm64e" "arm64;arm64e;x86_64" "arm64;arm64e;x86_64" "armv7k;arm64_32" "i386" "arm64" "x86_64")
 PLATFORMS=("OS64" "SIMULATOR64" "MAC_UNIVERSAL" "WATCHOS" "SIMULATOR_WATCHOS" "TVOS" "SIMULATOR_TVOS")
@@ -40,66 +46,68 @@ FRAMEWORK_C_OUTPUT="$ROOT/$DIST/$NAME_C.xcframework"
 CHECKSUM_FILE="$FRAMEWORK_OUTPUT.sha256"
 CHECKSUM_C_FILE="$FRAMEWORK_C_OUTPUT.sha256"
 
-function print()
-{
+# brew install tree     # if tree was not found
+# brew install gh       # if gh was not found
+
+function print() {
     echo "=============================="
     echo $1
     echo "=============================="
 }
 
-function replace()
-{
-  NUMBER=$1
-  LINE=$2
-  PATH=$3
-  
-  /usr/bin/perl -n -i -e "print unless $. == $NUMBER" $PATH
-  /usr/bin/perl -pi -e "print \"\n\" if $. == $NUMBER" $PATH
-  /usr/bin/perl -pi -e "print '$LINE' if $. == $NUMBER" $PATH
+function replace() {
+    NUMBER=$1
+    LINE=$2
+    PATH=$3
+
+    /usr/bin/perl -n -i -e "print unless $. == $NUMBER" $PATH
+    /usr/bin/perl -pi -e "print \"\n\" if $. == $NUMBER" $PATH
+    /usr/bin/perl -pi -e "print '$LINE' if $. == $NUMBER" $PATH
 }
 
-function clear()
-{
-  rm -rf "$ROOT/$NAME"
-  rm -rf "$ROOT/$BUILD"
-  rm -rf "$ROOT/$DIST"
+function clear() {
+    rm -rf "$ROOT/$NAME"
+    rm -rf "$ROOT/$BUILD"
+    rm -rf "$ROOT/$DIST"
 
-  rm -rf $LOGS
-  mkdir -p $LOGS
+    rm -rf $LOGS
+    mkdir -p $LOGS
 }
 
-function download()
-{
-  mkdir -p $DIST
-  mkdir -p $BUILD
+function download() {
+    mkdir -p $DIST
+    mkdir -p $BUILD
 
-  print "Downloading OpenMP source code"
-  FILENAME="v$VERSION.tar.gz"
-  wget "https://github.com/facebookresearch/$NAME/archive/refs/tags/$FILENAME"
-  mkdir $NAME
-  tar xf $FILENAME --strip-components=1 -C $NAME
-  rm -rf "$FILENAME"
-  rm -rf "$FILENAME.*"
+    print "Downloading OpenMP source code"
+    FILENAME="v$VERSION.tar.gz"
+    wget "https://github.com/facebookresearch/$NAME/archive/refs/tags/$FILENAME"
 
-  print "Patching $NAME_C in $NAME/c_api"
-  patch "$ROOT/$NAME/c_api/CMakeLists.txt" -i ./extra/CMakeLists.patch
+    # remove the folder if it already exists
+    if [ -d "$NAME" ]; then rm -Rf $NAME; fi
 
-  cd $DIST
-  wget $OPENMP_URL
-  unzip "$OPENMP_XCFRAMEWORK.zip"
+    mkdir $NAME
+    tar xf $FILENAME --strip-components=1 -C $NAME
+    rm -rf "$FILENAME"
+    rm -rf "$FILENAME.*"
 
-  rm -rf "$OPENMP_XCFRAMEWORK.zip"
-  cd $ROOT
+    print "Patching $NAME_C in $NAME/c_api"
+    patch "$ROOT/$NAME/c_api/CMakeLists.txt" -i ./extra/CMakeLists.patch
 
-  print "Downloading ios.toolchain.cmake"
-  cd extra
-  rm -rf ios.toolchain.cmake
-  wget https://raw.githubusercontent.com/leetal/ios-cmake/master/ios.toolchain.cmake
-  cd $ROOT
+    cd $DIST
+    wget $OPENMP_URL
+    unzip "$OPENMP_XCFRAMEWORK.zip"
+
+    rm -rf "$OPENMP_XCFRAMEWORK.zip"
+    cd $ROOT
+
+    print "Downloading ios.toolchain.cmake"
+    cd extra
+    rm -rf ios.toolchain.cmake
+    wget https://raw.githubusercontent.com/eugenehp/ios-cmake/master/ios.toolchain.cmake
+    cd $ROOT
 }
 
-function configure()
-{
+function configure() {
     ARCH=$1
     PLATFORM=$2
     TARGET=$3
@@ -116,33 +124,14 @@ function configure()
 
     CMAKE_FRAMEWORK_PATH="$ROOT/$DIST/$OPENMP_XCFRAMEWORK/$TRIPLE"
 
-    cmake $NAME\
-        -G Xcode\
-        -B $BUILD_DIR\
-        -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS\
-        -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE\
-        -DCMAKE_INSTALL_PREFIX=$OUTPUT\
-        -DPLATFORM=$PLATFORM\
-        -DENABLE_BITCODE=$ENABLE_BITCODE\
-        -DENABLE_ARC=$ENABLE_ARC\
-        -DENABLE_VISIBILITY=$ENABLE_VISIBILITY\
-        -DDEPLOYMENT_TARGET=$TARGET\
-        -DARCHS=$ARCH\
-        -DFAISS_ENABLE_GPU=$FAISS_ENABLE_GPU\
-        -DFAISS_ENABLE_PYTHON=$FAISS_ENABLE_PYTHON\
-        -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS\
-        -DFAISS_ENABLE_C_API=$FAISS_ENABLE_C_API\
-        -DCMAKE_WARN_DEPRECATED=0\
-        -DBUILD_TESTING=OFF\
-        -DOpenMP_CXX_LIB_NAMES="libomp"\
-        -DOpenMP_libomp_LIBRARY="$CMAKE_FRAMEWORK_PATH/libomp.a"\
-        -DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp -I$CMAKE_FRAMEWORK_PATH/Headers"\
-        -DCMAKE_CXX_FLAGS="-Wno-shorten-64-to-32 -Wno-deprecated-declarations"\
+    cmake $NAME -G Xcode -B $BUILD_DIR -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_INSTALL_PREFIX=$OUTPUT -DPLATFORM=$PLATFORM -DENABLE_BITCODE=$ENABLE_BITCODE -DENABLE_ARC=$ENABLE_ARC -DENABLE_VISIBILITY=$ENABLE_VISIBILITY -DDEPLOYMENT_TARGET=$TARGET -DARCHS=$ARCH -DFAISS_ENABLE_GPU=$FAISS_ENABLE_GPU -DFAISS_ENABLE_PYTHON=$FAISS_ENABLE_PYTHON -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -DFAISS_ENABLE_C_API=$FAISS_ENABLE_C_API -DCMAKE_WARN_DEPRECATED=0 -DBUILD_TESTING=OFF -DOpenMP_CXX_LIB_NAMES="libomp" \
+        -DOpenMP_libomp_LIBRARY="$CMAKE_FRAMEWORK_PATH/libomp.a" \
+        -DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp -I$CMAKE_FRAMEWORK_PATH/Headers" \
+        -DCMAKE_CXX_FLAGS="-Wno-shorten-64-to-32 -Wno-deprecated-declarations" \
         $EXTRA_FLAGS
 }
 
-function build()
-{
+function single_build() {
     ARCH=$1
     PLATFORM=$2
     BUILD_DIR="$ROOT/$BUILD/$NAME/$PLATFORM"
@@ -151,8 +140,7 @@ function build()
     cmake --build $BUILD_DIR -j $CPU_CORES
 }
 
-function install()
-{
+function install() {
     ARCH=$1
     PLATFORM=$2
     BUILD_DIR="$ROOT/$BUILD/$NAME/$PLATFORM"
@@ -160,13 +148,12 @@ function install()
 
     rm -rf "$OUTPUT"
     mkdir -p $OUTPUT
- 
+
     cmake --build $BUILD_DIR --target install
 }
 
 #XCODE 15 Error: "https://forums.swift.org/t/xcodebuild-create-xcframework-not-working-in-xcode-15-0/67439"
-function framework()
-{
+function framework() {
     echo "Preparing framework for $NAME"
 
     rm -rf $FRAMEWORK_OUTPUT
@@ -194,27 +181,26 @@ function framework()
     # openssl dgst -sha256 "$XCFRAMEWORK_FOLDER.zip"
 
     CHECKSUM=$(swift package compute-checksum "$FRAMEWORK_OUTPUT.zip")
-    echo $CHECKSUM > $CHECKSUM_FILE
+    echo $CHECKSUM >$CHECKSUM_FILE
     echo "$NAME - $CHECKSUM"
 
     CHECKSUM_C=$(swift package compute-checksum "$FRAMEWORK_C_OUTPUT.zip")
-    echo $CHECKSUM_C > $CHECKSUM_C_FILE
+    echo $CHECKSUM_C >$CHECKSUM_C_FILE
     echo "$NAME_C $CHECKSUM"
 
     update $CHECKSUM $CHECKSUM_C
 }
 
-function update()
-{
+function update() {
     print "Updating the versions in SPM, Cocoapods"
     CHECKSUM=$1
-    CHECKSUM_C=$1
+    CHECKSUM_C=$2
 
-    # SPM via Package.swift 
+    # SPM via Package.swift
     replace 4 "let version = \"$VERSION\"" "./Package.swift"
     replace 5 "let checksum = \"$CHECKSUM\"" "./Package.swift"
     replace 6 "let checksum_c = \"$CHECKSUM_C\"" "./Package.swift"
-    
+
     # Cocoapods via FAISS.podspec
     replace 2 "  version              = \"$VERSION\"" "./FAISS.podspec"
 
@@ -222,8 +208,7 @@ function update()
     $NODE extra/update-carthage.js $VERSION
 }
 
-function single_platform()
-{
+function single_platform() {
     ARCH=$1
     PLATFORM=$2
     TARGET=$3
@@ -234,28 +219,26 @@ function single_platform()
     (
         print "Configuring $NAME on $PLATFORM:$TARGET($ARCH) as $TRIPLE"
         configure $ARCH $PLATFORM $TARGET $TRIPLE
-        
+
         print "Configuring $NAME on $PLATFORM:$TARGET($ARCH) as $TRIPLE"
-        build $ARCH $PLATFORM
+        single_build $ARCH $PLATFORM
 
         print "Configuring $NAME on $PLATFORM:$TARGET($ARCH) as $TRIPLE"
         install $ARCH $PLATFORM
-    ) > "$LOGS/$PLATFORM-$TARGET.log"
+    ) >"$LOGS/$PLATFORM-$TARGET.log"
 }
 
-function start()
-{
+function build() {
     clear
     download
-    
+
     for index in ${!PLATFORMS[@]}; do
         ARCH=${ARCHS[$index]}
         PLATFORM=${PLATFORMS[$index]}
         TARGET=${TARGETS[$index]}
         TRIPLE=${TRIPLES[$index]}
-        
-        if [ $PARALLEL == "ON" ]
-        then
+
+        if [ $PARALLEL == "ON" ]; then
             single_platform $ARCH $PLATFORM $TARGET $TRIPLE & # ampersand enables platfrom runs in parallel
         else
             single_platform $ARCH $PLATFORM $TARGET $TRIPLE
@@ -265,8 +248,7 @@ function start()
     framework
 }
 
-function release()
-{
+function release() {
     print "Releasing $VERSION"
 
     TAG="v$VERSION"
@@ -276,34 +258,33 @@ function release()
 
     cd $FRAMEWORK_OUTPUT
     cd ../
-    
-    echo "# Release $VERSION" > $NOTES
-    echo "" >> $NOTES
-    
-    echo "## $NAME" >> $NOTES
-    echo "\`\`\`shell" >> $NOTES
+
+    echo "# Release $VERSION" >$NOTES
+    echo "" >>$NOTES
+
+    echo "## $NAME" >>$NOTES
+    echo "\`\`\`shell" >>$NOTES
     # tree "$NAME.xcframework" >> $NOTES
-    tree "$NAME.xcframework" -P '*.a' >> $NOTES
-    echo "\`\`\`" >> $NOTES
-    echo "" >> $NOTES
-    echo "Checksum for $NAME - \`$CHECKSUM\`" >> $NOTES
-    echo "" >> $NOTES
-    
-    echo "## $NAME_C" >> $NOTES
-    echo "\`\`\`shell" >> $NOTES
-    tree "$NAME_C.xcframework" >> $NOTES
-    echo "\`\`\`" >> $NOTES
-    echo "" >> $NOTES
-    echo "Checksum for $NAME_C - \`$CHECKSUM_C\`" >> $NOTES
-    echo "" >> $NOTES
-    
+    tree "$NAME.xcframework" -P '*.a' >>$NOTES
+    echo "\`\`\`" >>$NOTES
+    echo "" >>$NOTES
+    echo "Checksum for $NAME - \`$CHECKSUM\`" >>$NOTES
+    echo "" >>$NOTES
+
+    echo "## $NAME_C" >>$NOTES
+    echo "\`\`\`shell" >>$NOTES
+    tree "$NAME_C.xcframework" >>$NOTES
+    echo "\`\`\`" >>$NOTES
+    echo "" >>$NOTES
+    echo "Checksum for $NAME_C - \`$CHECKSUM_C\`" >>$NOTES
+    echo "" >>$NOTES
 
     cd $ROOT
 
     if [ $(git tag -l "v$VERSION") ]; then
         git tag -d "v$VERSION"
     fi
-    
+
     gh release create -d \
         -t "$VERSION" \
         -F $NOTES \
@@ -311,18 +292,27 @@ function release()
         "$FRAMEWORK_OUTPUT.zip" \
         "$FRAMEWORK_C_OUTPUT.zip" \
         $CHECKSUM_FILE \
-        $CHECKSUM_C_FILE \
-    
+        $CHECKSUM_C_FILE
+
     rm $NOTES
 
     gh release view $TAG -w
 }
 
-# start
+# start CLI
+option="${1}"
 
-if [ "$1" == "release" ]
-then
-    release
-else
-    start
-fi
+case ${option} in
+"release")
+    echo "Preparing the release" && release
+    ;;
+"clear")
+    echo "Clearing the dist" && clear
+    ;;
+"build")
+    echo "Building" && build
+    ;;
+*)
+    echo "Commands are: 'build', 'release', 'clear'. "
+    ;;
+esac

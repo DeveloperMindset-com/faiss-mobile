@@ -67,7 +67,7 @@ void IndexPreTransform::train(idx_t n, const float* x) {
         }
     }
     const float* prev_x = x;
-    ScopeDeleter<float> del;
+    std::unique_ptr<const float[]> del;
 
     if (verbose) {
         printf("IndexPreTransform::train: training chain 0 to %d\n",
@@ -102,10 +102,12 @@ void IndexPreTransform::train(idx_t n, const float* x) {
 
         float* xt = chain[i]->apply(n, prev_x);
 
-        if (prev_x != x)
-            delete[] prev_x;
+        if (prev_x != x) {
+            del.reset();
+        }
+
         prev_x = xt;
-        del.set(xt);
+        del.reset(xt);
     }
 
     is_trained = true;
@@ -113,11 +115,11 @@ void IndexPreTransform::train(idx_t n, const float* x) {
 
 const float* IndexPreTransform::apply_chain(idx_t n, const float* x) const {
     const float* prev_x = x;
-    ScopeDeleter<float> del;
+    std::unique_ptr<const float[]> del;
 
     for (int i = 0; i < chain.size(); i++) {
         float* xt = chain[i]->apply(n, prev_x);
-        ScopeDeleter<float> del2(xt);
+        std::unique_ptr<const float[]> del2(xt);
         del2.swap(del);
         prev_x = xt;
     }
@@ -128,11 +130,11 @@ const float* IndexPreTransform::apply_chain(idx_t n, const float* x) const {
 void IndexPreTransform::reverse_chain(idx_t n, const float* xt, float* x)
         const {
     const float* next_x = xt;
-    ScopeDeleter<float> del;
+    std::unique_ptr<const float[]> del;
 
     for (int i = chain.size() - 1; i >= 0; i--) {
         float* prev_x = (i == 0) ? x : new float[n * chain[i]->d_in];
-        ScopeDeleter<float> del2((prev_x == x) ? nullptr : prev_x);
+        std::unique_ptr<const float[]> del2((prev_x == x) ? nullptr : prev_x);
         chain[i]->reverse_transform(n, next_x, prev_x);
         del2.swap(del);
         next_x = prev_x;
@@ -141,9 +143,8 @@ void IndexPreTransform::reverse_chain(idx_t n, const float* xt, float* x)
 
 void IndexPreTransform::add(idx_t n, const float* x) {
     FAISS_THROW_IF_NOT(is_trained);
-    const float* xt = apply_chain(n, x);
-    ScopeDeleter<float> del(xt == x ? nullptr : xt);
-    index->add(n, xt);
+    TransformedVectors tv(x, apply_chain(n, x));
+    index->add(n, tv.x);
     ntotal = index->ntotal;
 }
 
@@ -152,9 +153,8 @@ void IndexPreTransform::add_with_ids(
         const float* x,
         const idx_t* xids) {
     FAISS_THROW_IF_NOT(is_trained);
-    const float* xt = apply_chain(n, x);
-    ScopeDeleter<float> del(xt == x ? nullptr : xt);
-    index->add_with_ids(n, xt, xids);
+    TransformedVectors tv(x, apply_chain(n, x));
+    index->add_with_ids(n, tv.x, xids);
     ntotal = index->ntotal;
 }
 
@@ -178,7 +178,7 @@ void IndexPreTransform::search(
     FAISS_THROW_IF_NOT(k > 0);
     FAISS_THROW_IF_NOT(is_trained);
     const float* xt = apply_chain(n, x);
-    ScopeDeleter<float> del(xt == x ? nullptr : xt);
+    std::unique_ptr<const float[]> del(xt == x ? nullptr : xt);
     index->search(
             n, xt, k, distances, labels, extract_index_search_params(params));
 }
@@ -190,10 +190,9 @@ void IndexPreTransform::range_search(
         RangeSearchResult* result,
         const SearchParameters* params) const {
     FAISS_THROW_IF_NOT(is_trained);
-    const float* xt = apply_chain(n, x);
-    ScopeDeleter<float> del(xt == x ? nullptr : xt);
+    TransformedVectors tv(x, apply_chain(n, x));
     index->range_search(
-            n, xt, radius, result, extract_index_search_params(params));
+            n, tv.x, radius, result, extract_index_search_params(params));
 }
 
 void IndexPreTransform::reset() {
@@ -209,7 +208,7 @@ size_t IndexPreTransform::remove_ids(const IDSelector& sel) {
 
 void IndexPreTransform::reconstruct(idx_t key, float* recons) const {
     float* x = chain.empty() ? recons : new float[index->d];
-    ScopeDeleter<float> del(recons == x ? nullptr : x);
+    std::unique_ptr<float[]> del(recons == x ? nullptr : x);
     // Initial reconstruction
     index->reconstruct(key, x);
 
@@ -219,7 +218,7 @@ void IndexPreTransform::reconstruct(idx_t key, float* recons) const {
 
 void IndexPreTransform::reconstruct_n(idx_t i0, idx_t ni, float* recons) const {
     float* x = chain.empty() ? recons : new float[ni * index->d];
-    ScopeDeleter<float> del(recons == x ? nullptr : x);
+    std::unique_ptr<float[]> del(recons == x ? nullptr : x);
     // Initial reconstruction
     index->reconstruct_n(i0, ni, x);
 
@@ -238,14 +237,14 @@ void IndexPreTransform::search_and_reconstruct(
     FAISS_THROW_IF_NOT(k > 0);
     FAISS_THROW_IF_NOT(is_trained);
 
-    const float* xt = apply_chain(n, x);
-    ScopeDeleter<float> del((xt == x) ? nullptr : xt);
+    TransformedVectors trans(x, apply_chain(n, x));
 
     float* recons_temp = chain.empty() ? recons : new float[n * k * index->d];
-    ScopeDeleter<float> del2((recons_temp == recons) ? nullptr : recons_temp);
+    std::unique_ptr<float[]> del2(
+            (recons_temp == recons) ? nullptr : recons_temp);
     index->search_and_reconstruct(
             n,
-            xt,
+            trans.x,
             k,
             distances,
             labels,
@@ -262,13 +261,8 @@ size_t IndexPreTransform::sa_code_size() const {
 
 void IndexPreTransform::sa_encode(idx_t n, const float* x, uint8_t* bytes)
         const {
-    if (chain.empty()) {
-        index->sa_encode(n, x, bytes);
-    } else {
-        const float* xt = apply_chain(n, x);
-        ScopeDeleter<float> del(xt == x ? nullptr : xt);
-        index->sa_encode(n, xt, bytes);
-    }
+    TransformedVectors tv(x, apply_chain(n, x));
+    index->sa_encode(n, tv.x, bytes);
 }
 
 void IndexPreTransform::sa_decode(idx_t n, const uint8_t* bytes, float* x)

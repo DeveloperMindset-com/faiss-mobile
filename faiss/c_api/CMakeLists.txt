@@ -30,10 +30,10 @@ set(FAISS_C_SRC
   index_io_c.cpp
   impl/AuxIndexStructures_c.cpp
   utils/distances_c.cpp
+  utils/utils_c.cpp
 )
 add_library(faiss_c ${FAISS_C_SRC})
 target_link_libraries(faiss_c PRIVATE faiss)
-
 install(TARGETS faiss_c
   EXPORT faiss-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -41,6 +41,7 @@ install(TARGETS faiss_c
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
+
 
 function(faiss_install_headers headers p)
   foreach(h ${headers})
@@ -63,5 +64,9 @@ add_executable(example_c EXCLUDE_FROM_ALL example_c.c)
 target_link_libraries(example_c PRIVATE faiss_c)
 
 if(FAISS_ENABLE_GPU)
-  add_subdirectory(gpu)
+  if(FAISS_ENABLE_ROCM)
+    add_subdirectory(gpu-rocm)
+  else ()
+    add_subdirectory(gpu)
+  endif()
 endif()

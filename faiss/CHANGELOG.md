@@ -1,14 +1,95 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project DOES NOT adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
-at the moment.
-
-We try to indicate most contributions here with the contributor names who are not part of
-the Facebook Faiss team.  Feel free to add entries here if you submit a PR.
-
 ## [Unreleased]
+
+## [1.9.0] - 2024-10-04
+### Added
+- Add AVX-512 implementation for the distance and scalar quantizer functions. (#3853)
+- Allow k and M suffixes in IVF indexes (#3812)
+- add reconstruct support to additive quantizers (#3752)
+- introduce options for reducing the overhead for a clustering procedure (#3731)
+- Add hnsw search params for bounded queue option (#3748)
+- ROCm support (#3462)
+- Add sve targets (#2886)
+- add get_version() for c_api (#3688)
+- QINCo implementation in CPU Faiss (#3608)
+- Add search functionality to FlatCodes (#3611)
+- add dispatcher for VectorDistance and ResultHandlers (#3627)
+- Add SQ8bit signed quantization (#3501)
+- Add ABS_INNER_PRODUCT metric (#3524)
+- Interop between CAGRA and HNSW (#3252)
+- add skip_storage flag to HNSW (#3487)
+- QT_bf16 for scalar quantizer for bfloat16 (#3444)
+- Implement METRIC.NaNEuclidean (#3414)
+- TimeoutCallback C++ and Python (#3417)
+- support big-endian machines (#3361)
+- Support for Remove ids from IVFPQFastScan index (#3354)
+- Implement reconstruct_n for GPU IVFFlat indexes (#3338)
+- Support of skip_ids in merge_from_multiple function of OnDiskInvertedLists (#3327)
+- Add the ability to clone and read binary indexes to the C API. (#3318)
+- AVX512 for PQFastScan (#3276)
+
+### Changed
+- faster hnsw CPU index training (#3822)
+- Some small improvements. (#3692)
+- First attempt at LSH matching with nbits (#3679)
+- Set verbosoe before train (#3619)
+- Remove duplicate NegativeDistanceComputer instances (#3450)
+- interrupt for NNDescent (#3432)
+- Get rid of redundant instructions in ScalarQuantizer (#3430)
+- PowerPC, improve code generation for function fvec_L2sqr (#3416)
+- Unroll loop in lookup_2_lanes (#3364)
+- Improve filtering & search parameters propagation (#3304)
+- Change index_cpu_to_gpu to throw for indices not implemented on GPU (#3336)
+- Throw when attempting to move IndexPQ to GPU (#3328)
+- Skip HNSWPQ sdc init with new io flag (#3250)
+
+### Fixed
+- FIx a bug for a non-simdlib code of ResidualQuantizer (#3868)
+- assign_index should default to null (#3855)
+- Fix an incorrectly counted the number of computed distances for HNSW (#3840)
+- Add error for overflowing nbits during PQ construction (#3833)
+- Fix radius search with HSNW and IP (#3698)
+- fix algorithm of spreading vectors over shards (#3374)
+- Fix IndexBinary.assign Python method (#3384)
+- Few fixes in bench_fw to enable IndexFromCodec (#3383)
+- Fix the endianness issue in AIX while running the benchmark. (#3345)
+- Fix faiss swig build with version > 4.2.x (#3315)
+- Fix problems when using 64-bit integers. (#3322)
+- Fix IVFPQFastScan decode function (#3312)
+- Handling FaissException in few destructors of ResultHandler.h (#3311)
+- Fix HNSW stats (#3309)
+- AIX compilation fix for io classes (#3275)
+
+
+## [1.8.0] - 2024-02-27
+### Added
+- Added a new conda package faiss-gpu-raft alongside faiss-cpu and faiss-gpu
+- Integrated IVF-Flat and IVF-PQ implementations in faiss-gpu-raft from RAFT by Nvidia [thanks Corey Nolet and Tarang Jain]
+- Added a context parameter to InvertedLists and InvertedListsIterator
+- Added Faiss on Rocksdb demo to showing how inverted lists can be persisted in a key-value store
+- Introduced Offline IVF framework powered by Faiss big batch search
+- Added SIMD NEON Optimization for QT_FP16 in Scalar Quantizer. [thanks Naveen Tatikonda]
+- Generalized ResultHandler and supported range search for HNSW and FastScan
+- Introduced avx512 optimization mode and FAISS_OPT_LEVEL env variable [thanks Alexandr Ghuzva]
+- Added search parameters for IndexRefine::search() and IndexRefineFlat::search()
+- Supported large two-level clustering
+- Added support for Python 3.11 and 3.12
+- Added support for CUDA 12
+
+### Changed
+- Used the benchmark to find Pareto optimal indices. Intentionally limited to IVF(Flat|HNSW),PQ|SQ indices
+- Splitted off RQ encoding steps to another file
+- Supported better NaN handling
+- HNSW speedup + Distance 4 points [thanks Alexandr Ghuzva]
+
+### Fixed
+- Fixed DeviceVector reallocations in Faiss GPU
+- Used efSearch from params if provided in HNSW search
+- Fixed warp synchronous behavior in Faiss GPU CUDA 12
+
+
 ## [1.7.4] - 2023-04-12
 ### Added
 - Added big batch IVF search for conducting efficient search with big batches of queries
@@ -258,7 +339,9 @@ by conda install -c pytorch faiss-gpu cudatoolkit=10.0.
 - C bindings.
 - Extended tutorial to GPU indices.
 
-[Unreleased]: https://github.com/facebookresearch/faiss/compare/v1.7.4...HEAD
+[Unreleased]: https://github.com/facebookresearch/faiss/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/facebookresearch/faiss/compare/v1.8.0...v1.9.0
+[1.8.0]: https://github.com/facebookresearch/faiss/compare/v1.7.4...v1.8.0
 [1.7.4]: https://github.com/facebookresearch/faiss/compare/v1.7.3...v1.7.4
 [1.7.3]: https://github.com/facebookresearch/faiss/compare/v1.7.2...v1.7.3
 [1.7.2]: https://github.com/facebookresearch/faiss/compare/v1.7.1...v1.7.2

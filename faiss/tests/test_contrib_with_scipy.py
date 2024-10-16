@@ -17,26 +17,6 @@ import scipy.sparse
 
 class TestClustering(unittest.TestCase):
 
-    def test_python_kmeans(self):
-        """ Test the python implementation of kmeans """
-        ds = datasets.SyntheticDataset(32, 10000, 0, 0)
-        x = ds.get_train()
-
-        # bad distribution to stress-test split code
-        xt = x[:10000].copy()
-        xt[:5000] = x[0]
-
-        km_ref = faiss.Kmeans(ds.d, 100, niter=10)
-        km_ref.train(xt)
-        err = faiss.knn(xt, km_ref.centroids, 1)[0].sum()
-
-        data = clustering.DatasetAssign(xt)
-        centroids = clustering.kmeans(100, data, 10)
-        err2 = faiss.knn(xt, centroids, 1)[0].sum()
-
-        # 33517.645 and 33031.098
-        self.assertLess(err2, err * 1.1)
-
     def test_sparse_routines(self):
         """ the sparse assignment routine """
         ds = datasets.SyntheticDataset(1000, 2000, 0, 200)
@@ -44,7 +24,6 @@ class TestClustering(unittest.TestCase):
         faiss.normalize_L2(xt)
 
         mask = np.abs(xt) > 0.045
-        # print("fraction:", mask.sum() / mask.size) # around 10% non-zeros
         xt[np.logical_not(mask)] = 0
 
         centroids = ds.get_queries()
@@ -72,7 +51,6 @@ class TestClustering(unittest.TestCase):
         faiss.normalize_L2(xt)
 
         mask = np.abs(xt) > 0.045
-        # print("fraction:", mask.sum() / mask.size) # around 10% non-zeros
         xt[np.logical_not(mask)] = 0
 
         km = faiss.Kmeans(ds.d, 50)

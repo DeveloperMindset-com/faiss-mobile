@@ -41,7 +41,6 @@ struct RangeSearchResult {
 
     /// called when lims contains the nb of elements result entries
     /// for each query
-
     virtual void do_allocation();
 
     virtual ~RangeSearchResult();
@@ -123,7 +122,7 @@ struct RangeSearchPartialResult : BufferList {
     void copy_result(bool incremental = false);
 
     /// merge a set of PartialResult's into one RangeSearchResult
-    /// on ouptut the partialresults are empty!
+    /// on output the partialresults are empty!
     static void merge(
             std::vector<RangeSearchPartialResult*>& partial_results,
             bool do_delete = true);
@@ -162,10 +161,18 @@ struct FAISS_API InterruptCallback {
     static size_t get_period_hint(size_t flops);
 };
 
+struct TimeoutCallback : InterruptCallback {
+    std::chrono::time_point<std::chrono::steady_clock> start;
+    double timeout;
+    bool want_interrupt() override;
+    void set_timeout(double timeout_in_seconds);
+    static void reset(double timeout_in_seconds);
+};
+
 /// set implementation optimized for fast access.
 struct VisitedTable {
     std::vector<uint8_t> visited;
-    int visno;
+    uint8_t visno;
 
     explicit VisitedTable(int size) : visited(size), visno(1) {}
 

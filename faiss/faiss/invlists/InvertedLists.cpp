@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// -*- c++ -*-
-
 #include <faiss/invlists/InvertedLists.h>
 
 #include <cstdio>
@@ -24,16 +22,9 @@ InvertedListsIterator::~InvertedListsIterator() {}
  ******************************************/
 
 InvertedLists::InvertedLists(size_t nlist, size_t code_size)
-        : nlist(nlist), code_size(code_size), use_iterator(false) {}
+        : nlist(nlist), code_size(code_size) {}
 
 InvertedLists::~InvertedLists() {}
-
-bool InvertedLists::is_empty(size_t list_no) const {
-    return use_iterator
-            ? !std::unique_ptr<InvertedListsIterator>(get_iterator(list_no))
-                       ->is_available()
-            : list_size(list_no) == 0;
-}
 
 idx_t InvertedLists::get_single_id(size_t list_no, size_t offset) const {
     assert(offset < list_size(list_no));
@@ -58,7 +49,8 @@ const uint8_t* InvertedLists::get_single_code(size_t list_no, size_t offset)
 size_t InvertedLists::add_entry(
         size_t list_no,
         idx_t theid,
-        const uint8_t* code) {
+        const uint8_t* code,
+        void* /*inverted_list_context*/) {
     return add_entries(list_no, 1, &theid, code);
 }
 
@@ -74,10 +66,6 @@ void InvertedLists::reset() {
     for (size_t i = 0; i < nlist; i++) {
         resize(i, 0);
     }
-}
-
-InvertedListsIterator* InvertedLists::get_iterator(size_t /*list_no*/) const {
-    FAISS_THROW_MSG("get_iterator is not supported");
 }
 
 void InvertedLists::merge_from(InvertedLists* oivf, size_t add_id) {
@@ -229,6 +217,54 @@ size_t InvertedLists::compute_ntotal() const {
     return tot;
 }
 
+bool InvertedLists::is_empty(size_t list_no, void* inverted_list_context)
+        const {
+    if (use_iterator) {
+        return !std::unique_ptr<InvertedListsIterator>(
+                        get_iterator(list_no, inverted_list_context))
+                        ->is_available();
+    } else {
+        FAISS_THROW_IF_NOT(inverted_list_context == nullptr);
+        return list_size(list_no) == 0;
+    }
+}
+
+// implemnent iterator on top of get_codes / get_ids
+namespace {
+
+struct CodeArrayIterator : InvertedListsIterator {
+    size_t list_size;
+    size_t code_size;
+    InvertedLists::ScopedCodes codes;
+    InvertedLists::ScopedIds ids;
+    size_t idx = 0;
+
+    CodeArrayIterator(const InvertedLists* il, size_t list_no)
+            : list_size(il->list_size(list_no)),
+              code_size(il->code_size),
+              codes(il, list_no),
+              ids(il, list_no) {}
+
+    bool is_available() const override {
+        return idx < list_size;
+    }
+    void next() override {
+        idx++;
+    }
+    std::pair<idx_t, const uint8_t*> get_id_and_codes() override {
+        return {ids[idx], codes.get() + code_size * idx};
+    }
+};
+
+} // namespace
+
+InvertedListsIterator* InvertedLists::get_iterator(
+        size_t list_no,
+        void* inverted_list_context) const {
+    FAISS_THROW_IF_NOT(inverted_list_context == nullptr);
+    return new CodeArrayIterator(this, list_no);
+}
+
 /*****************************************
  * ArrayInvertedLists implementation
  ******************************************/
@@ -260,6 +296,12 @@ size_t ArrayInvertedLists::list_size(size_t list_no) const {
     return ids[list_no].size();
 }
 
+bool ArrayInvertedLists::is_empty(size_t list_no, void* inverted_list_context)
+        const {
+    FAISS_THROW_IF_NOT(inverted_list_context == nullptr);
+    return ids[list_no].size() == 0;
+}
+
 const uint8_t* ArrayInvertedLists::get_codes(size_t list_no) const {
     assert(list_no < nlist);
     return codes[list_no].data();
@@ -285,6 +327,20 @@ void ArrayInvertedLists::update_entries(
     assert(n_entry + offset <= ids[list_no].size());
     memcpy(&ids[list_no][offset], ids_in, sizeof(ids_in[0]) * n_entry);
     memcpy(&codes[list_no][offset * code_size], codes_in, code_size * n_entry);
+}
+
+void ArrayInvertedLists::permute_invlists(const idx_t* map) {
+    std::vector<std::vector<uint8_t>> new_codes(nlist);
+    std::vector<std::vector<idx_t>> new_ids(nlist);
+
+    for (size_t i = 0; i < nlist; i++) {
+        size_t o = map[i];
+        FAISS_THROW_IF_NOT(o < nlist);
+        std::swap(new_codes[i], codes[o]);
+        std::swap(new_ids[i], ids[o]);
+    }
+    std::swap(codes, new_codes);
+    std::swap(ids, new_ids);
 }
 
 ArrayInvertedLists::~ArrayInvertedLists() {}
@@ -423,7 +479,7 @@ idx_t translate_list_no(const SliceInvertedLists* sil, idx_t list_no) {
     return list_no + sil->i0;
 }
 
-}; // namespace
+} // namespace
 
 SliceInvertedLists::SliceInvertedLists(
         const InvertedLists* il,
@@ -508,7 +564,7 @@ idx_t sum_il_sizes(int nil, const InvertedLists** ils_in) {
     return tot;
 }
 
-}; // namespace
+} // namespace
 
 VStackInvertedLists::VStackInvertedLists(int nil, const InvertedLists** ils_in)
         : ReadOnlyInvertedLists(

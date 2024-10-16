@@ -226,31 +226,50 @@ def range_PR_multiple_thresholds(
 # Functions that compare search results with a reference result.
 # They are intended for use in tests
 
-def test_ref_knn_with_draws(Dref, Iref, Dnew, Inew):
-    """ test that knn search results are identical, raise if not """
-    np.testing.assert_array_almost_equal(Dref, Dnew, decimal=5)
+def _cluster_tables_with_tolerance(tab1, tab2, thr):
+    """ for two tables, cluster them by merging values closer than thr.
+    Returns the cluster ids for each table element """
+    tab = np.hstack([tab1, tab2])
+    tab.sort()
+    n = len(tab)
+    diffs = np.ones(n)
+    diffs[1:] = tab[1:] - tab[:-1]
+    unique_vals = tab[diffs > thr]
+    idx1 = np.searchsorted(unique_vals, tab1, side='right') - 1
+    idx2 = np.searchsorted(unique_vals, tab2, side='right') - 1
+    return idx1, idx2
+
+
+def check_ref_knn_with_draws(Dref, Iref, Dnew, Inew, rtol=1e-5):
+    """ test that knn search results are identical, with possible ties.
+    Raise if not. """
+    np.testing.assert_allclose(Dref, Dnew, rtol=rtol)
     # here we have to be careful because of draws
     testcase = unittest.TestCase()   # because it makes nice error messages
     for i in range(len(Iref)):
         if np.all(Iref[i] == Inew[i]): # easy case
             continue
-        # we can deduce nothing about the latest line
-        skip_dis = Dref[i, -1]
-        for dis in np.unique(Dref):
-            if dis == skip_dis:
+
+        # otherwise collect elements per distance
+        r = rtol * Dref[i].max()
+
+        DrefC, DnewC = _cluster_tables_with_tolerance(Dref[i], Dnew[i], r)
+
+        for dis in np.unique(DrefC):
+            if dis == DrefC[-1]:
                 continue
-            mask = Dref[i, :] == dis
+            mask = DrefC == dis
             testcase.assertEqual(set(Iref[i, mask]), set(Inew[i, mask]))
 
 
-def test_ref_range_results(lims_ref, Dref, Iref,
-                           lims_new, Dnew, Inew):
+def check_ref_range_results(Lref, Dref, Iref,
+                            Lnew, Dnew, Inew):
     """ compare range search results wrt. a reference result,
     throw if it fails """
-    np.testing.assert_array_equal(lims_ref, lims_new)
-    nq = len(lims_ref) - 1
+    np.testing.assert_array_equal(Lref, Lnew)
+    nq = len(Lref) - 1
     for i in range(nq):
-        l0, l1 = lims_ref[i], lims_ref[i + 1]
+        l0, l1 = Lref[i], Lref[i + 1]
         Ii_ref = Iref[l0:l1]
         Ii_new = Inew[l0:l1]
         Di_ref = Dref[l0:l1]
@@ -362,7 +381,23 @@ class OperatingPointsWithRanges(OperatingPoints):
         return np.zeros(len(self.ranges), dtype=int)
 
     def num_experiments(self):
-        return np.prod([len(values) for name, values in self.ranges])
+        return int(np.prod([len(values) for name, values in self.ranges]))
+
+    def sample_experiments(self, n_autotune, rs=np.random):
+        """ sample a set of experiments of max size n_autotune
+        (run all experiments in random order if n_autotune is 0)
+        """
+        assert n_autotune == 0 or n_autotune >= 2
+        totex = self.num_experiments()
+        rs = np.random.RandomState(123)
+        if n_autotune == 0 or totex < n_autotune:
+            experiments = rs.permutation(totex - 2)
+        else:
+            experiments = rs.choice(
+                totex - 2, size=n_autotune - 2, replace=False)
+
+        experiments = [0, totex - 1] + [int(cno) + 1 for cno in experiments]
+        return experiments
 
     def cno_to_key(self, cno):
         """Convert a sequential experiment number to a key"""

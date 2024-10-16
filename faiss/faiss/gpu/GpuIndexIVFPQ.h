@@ -23,24 +23,19 @@ class GpuIndexFlat;
 class IVFPQ;
 
 struct GpuIndexIVFPQConfig : public GpuIndexIVFConfig {
-    inline GpuIndexIVFPQConfig()
-            : useFloat16LookupTables(false),
-              usePrecomputedTables(false),
-              interleavedLayout(false),
-              useMMCodeDistance(false) {}
-
     /// Whether or not float16 residual distance tables are used in the
     /// list scanning kernels. When subQuantizers * 2^bitsPerCode >
     /// 16384, this is required.
-    bool useFloat16LookupTables;
+    bool useFloat16LookupTables = false;
 
     /// Whether or not we enable the precomputed table option for
     /// search, which can substantially increase the memory requirement.
-    bool usePrecomputedTables;
+    bool usePrecomputedTables = false;
 
     /// Use the alternative memory layout for the IVF lists
-    /// WARNING: this is a feature under development, do not use!
-    bool interleavedLayout;
+    /// WARNING: this is a feature under development, and is only supported with
+    /// RAFT enabled for the index. Do not use if RAFT is not enabled.
+    bool interleavedLayout = false;
 
     /// Use GEMM-backed computation of PQ code distances for the no precomputed
     /// table version of IVFPQ.
@@ -50,7 +45,7 @@ struct GpuIndexIVFPQConfig : public GpuIndexIVFConfig {
     /// Note that MM code distance is enabled automatically if one uses a number
     /// of dimensions per sub-quantizer that is not natively specialized (an odd
     /// number like 7 or so).
-    bool useMMCodeDistance;
+    bool useMMCodeDistance = false;
 };
 
 /// IVFPQ index for the GPU
@@ -139,6 +134,22 @@ class GpuIndexIVFPQ : public GpuIndexIVF {
     ProductQuantizer pq;
 
    protected:
+    /// Initialize appropriate index
+    void setIndex_(
+            GpuResources* resources,
+            int dim,
+            idx_t nlist,
+            faiss::MetricType metric,
+            float metricArg,
+            int numSubQuantizers,
+            int bitsPerSubQuantizer,
+            bool useFloat16LookupTables,
+            bool useMMCodeDistance,
+            bool interleavedLayout,
+            float* pqCentroidData,
+            IndicesOptions indicesOptions,
+            MemorySpace space);
+
     /// Throws errors if configuration settings are improper
     void verifyPQSettings_() const;
 

@@ -1,0 +1,110 @@
+# This file is part of the ios-cmake project. It was retrieved from
+# https://github.com/leetal/ios-cmake.git, which is a fork of
+# https://github.com/gerstrong/ios-cmake.git, which is a fork of
+# https://github.com/cristeab/ios-cmake.git, which is a fork of
+# https://code.google.com/p/ios-cmake/. Which in turn is based off of
+# the Platform/Darwin.cmake and Platform/UnixPaths.cmake files which
+# are included with CMake 2.8.4
+#
+# The ios-cmake project is licensed under the new BSD license.
+#
+# Copyright (c) 2014, Bogdan Cristea and LTE Engineering Software,
+# Kitware, Inc., Insight Software Consortium.  All rights reserved.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+# This file is based on the Platform/Darwin.cmake and
+# Platform/UnixPaths.cmake files which are included with CMake 2.8.4
+# It has been altered for iOS development.
+#
+# Updated by Alex Stewart (alexs.mac@gmail.com)
+#
+# *****************************************************************************
+#      Now maintained by Alexander Widerberg (widerbergaren [at] gmail.com)
+#                      under the BSD-3-Clause license
+#                   https://github.com/leetal/ios-cmake
+# *****************************************************************************
+#
+#                           INFORMATION / HELP
+#
+###############################################################################
+#                                  OPTIONS                                    #
+###############################################################################
+#
+# PLATFORM: (default "OS64")
+#    OS = Build for iPhoneOS.
+#    OS64 = Build for arm64 iphoneOS.
+#    OS64COMBINED = Build for arm64 x86_64 iphoneOS + iphoneOS Simulator. Combined into FAT STATIC lib (only supported on 3.14+ of CMake with "-G Xcode" argument in combination with the "cmake --install" CMake build step)
+#    SIMULATOR = Build for x86 i386 iphoneOS Simulator.
+#    SIMULATOR64 = Build for x86_64 iphoneOS Simulator.
+#    SIMULATORARM64 = Build for arm64 iphoneOS Simulator.
+#    SIMULATOR64COMBINED = Build for arm64 x86_64 iphoneOS Simulator. Combined into FAT STATIC lib (supported on 3.14+ of CMakewith "-G Xcode" argument ONLY)
+#    TVOS = Build for arm64 tvOS.
+#    TVOSCOMBINED = Build for arm64 x86_64 tvOS + tvOS Simulator. Combined into FAT STATIC lib (only supported on 3.14+ of CMake with "-G Xcode" argument in combination with the "cmake --install" CMake build step)
+#    SIMULATOR_TVOS = Build for x86_64 tvOS Simulator.
+#    SIMULATORARM64_TVOS = Build for arm64 tvOS Simulator.
+#    VISIONOSCOMBINED = Build for arm64 visionOS + visionOS Simulator. Combined into FAT STATIC lib (only supported on 3.14+ of CMake with "-G Xcode" argument in combination with the "cmake --install" CMake build step)
+#    VISIONOS = Build for arm64 visionOS.
+#    SIMULATOR_VISIONOS = Build for arm64 visionOS Simulator.
+#    WATCHOS = Build for armv7k arm64_32 for watchOS.
+#    WATCHOSCOMBINED = Build for armv7k arm64_32 x86_64 watchOS + watchOS Simulator. Combined into FAT STATIC lib (only supported on 3.14+ of CMake with "-G Xcode" argument in combination with the "cmake --install" CMake build step)
+#    SIMULATOR_WATCHOS = Build for x86_64 for watchOS Simulator.
+#    SIMULATORARM64_WATCHOS = Build for arm64 for watchOS Simulator.
+#    MAC = Build for x86_64 macOS.
+#    MAC_ARM64 = Build for Apple Silicon macOS.
+#    MAC_UNIVERSAL = Combined build for x86_64 and Apple Silicon on macOS.
+#    MAC_CATALYST = Build for x86_64 macOS with Catalyst support (iOS toolchain on macOS).
+#                   Note: The build argument "MACOSX_DEPLOYMENT_TARGET" can be used to control min-version of macOS
+#    MAC_CATALYST_ARM64 = Build for Apple Silicon macOS with Catalyst support (iOS toolchain on macOS).
+#                         Note: The build argument "MACOSX_DEPLOYMENT_TARGET" can be used to control min-version of macOS
+#    MAC_CATALYST_UNIVERSAL = Combined build for x86_64 and Apple Silicon on Catalyst.
+#
+# CMAKE_OSX_SYSROOT: Path to the SDK to use.  By default this is
+#    automatically determined from PLATFORM and xcodebuild, but
+#    can also be manually specified (although this should not be required).
+#
+# CMAKE_DEVELOPER_ROOT: Path to the Developer directory for the platform
+#    being compiled for.  By default, this is automatically determined from
+#    CMAKE_OSX_SYSROOT, but can also be manually specified (although this should
+#    not be required).
+#
+# DEPLOYMENT_TARGET: Minimum SDK version to target. Default 6.0 on watchOS, 13.0 on tvOS+iOS/iPadOS, 11.0 on macOS, 1.0 on visionOS
+#
+# NAMED_LANGUAGE_SUPPORT:
+#    ON (default) = Will require "enable_language(OBJC) and/or enable_language(OBJCXX)" for full OBJC|OBJCXX support
+#    OFF = Will embed the OBJC and OBJCXX flags into the CMAKE_C_FLAGS and CMAKE_CXX_FLAGS (legacy behavior, CMake version < 3.16)
+#
+# ENABLE_BITCODE: (ON|OFF) Enables or disables bitcode support. Default OFF
+#
+# ENABLE_ARC: (ON|OFF) Enables or disables ARC support. Default ON (ARC enabled by default)
+#
+# ENABLE_VISIBILITY: (ON|OFF) Enables or disables symbol visibility support. Default OFF (visibility hidden by default)
+#
+# ENABLE_STRICT_TRY_COMPILE: (ON|OFF) Enables or disables strict try_compile() on all Check* directives (will run linker
+#    to actually check if linking is possible). Default OFF (will set CMAKE_TRY_COMPILE_TARGET_TYPE to STATIC_LIBRARY)
+#
+# ARCHS: (armv7 armv7s armv7k arm64 arm64_32 i386 x86_64) If specified, will overr

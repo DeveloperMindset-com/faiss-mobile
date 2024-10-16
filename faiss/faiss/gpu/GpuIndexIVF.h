@@ -21,13 +21,17 @@ class GpuIndexFlat;
 class IVFBase;
 
 struct GpuIndexIVFConfig : public GpuIndexConfig {
-    inline GpuIndexIVFConfig() : indicesOptions(INDICES_64_BIT) {}
-
     /// Index storage options for the GPU
-    IndicesOptions indicesOptions;
+    IndicesOptions indicesOptions = INDICES_64_BIT;
 
     /// Configuration for the coarse quantizer object
     GpuIndexFlatConfig flatConfig;
+
+    /// This flag controls the CPU fallback logic for coarse quantizer
+    /// component of the index. When set to false (default), the cloner will
+    /// throw an exception for indices not implemented on GPU. When set to
+    /// true, it will fallback to a CPU implementation.
+    bool allowCpuCoarseQuantizer = false;
 };
 
 /// Base class of all GPU IVF index types. This (for now) deliberately does not
@@ -75,10 +79,10 @@ class GpuIndexIVF : public GpuIndex, public IndexIVFInterface {
     virtual void updateQuantizer() = 0;
 
     /// Returns the number of inverted lists we're managing
-    idx_t getNumLists() const;
+    virtual idx_t getNumLists() const;
 
     /// Returns the number of vectors present in a particular inverted list
-    idx_t getListLength(idx_t listId) const;
+    virtual idx_t getListLength(idx_t listId) const;
 
     /// Return the encoded vector data contained in a particular inverted list,
     /// for debugging purposes.
@@ -86,12 +90,13 @@ class GpuIndexIVF : public GpuIndex, public IndexIVFInterface {
     /// GPU-side representation.
     /// Otherwise, it is converted to the CPU format.
     /// compliant format, while the native GPU format may differ.
-    std::vector<uint8_t> getListVectorData(idx_t listId, bool gpuFormat = false)
-            const;
+    virtual std::vector<uint8_t> getListVectorData(
+            idx_t listId,
+            bool gpuFormat = false) const;
 
     /// Return the vector indices contained in a particular inverted list, for
     /// debugging purposes.
-    std::vector<idx_t> getListIndices(idx_t listId) const;
+    virtual std::vector<idx_t> getListIndices(idx_t listId) const;
 
     void search_preassigned(
             idx_t n,
@@ -123,7 +128,7 @@ class GpuIndexIVF : public GpuIndex, public IndexIVFInterface {
     int getCurrentNProbe_(const SearchParameters* params) const;
     void verifyIVFSettings_() const;
     bool addImplRequiresIDs_() const override;
-    void trainQuantizer_(idx_t n, const float* x);
+    virtual void trainQuantizer_(idx_t n, const float* x);
 
     /// Called from GpuIndex for add/add_with_ids
     void addImpl_(idx_t n, const float* x, const idx_t* ids) override;

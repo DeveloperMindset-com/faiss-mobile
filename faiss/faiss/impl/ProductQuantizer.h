@@ -21,7 +21,11 @@
 
 namespace faiss {
 
-/** Product Quantizer. Implemented only for METRIC_L2 */
+/** Product Quantizer.
+ * PQ is trained using k-means, minimizing the L2 distance to centroids.
+ * PQ supports L2 and Inner Product search, however the quantization error is
+ * biased towards L2 distance.
+ */
 struct ProductQuantizer : Quantizer {
     size_t M;     ///< number of subquantizers
     size_t nbits; ///< number of bits per quantization index
@@ -35,7 +39,7 @@ struct ProductQuantizer : Quantizer {
     enum train_type_t {
         Train_default,
         Train_hot_start,     ///< the centroids are already initialized
-        Train_shared,        ///< share dictionary accross PQ segments
+        Train_shared,        ///< share dictionary across PQ segments
         Train_hypercube,     ///< initialize centroids with nbits-D hypercube
         Train_hypercube_pca, ///< initialize centroids with nbits-D hypercube
     };

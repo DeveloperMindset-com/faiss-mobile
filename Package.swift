@@ -1,10 +1,10 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.9
 import PackageDescription
 
-let version = "1.7.4"
-let checksum = "85526c0384812d1b3c113dabb67ee779afe9b5225a9a57fbe936298a610b6f86"
-let checksum_c = "581024fc0495a42acf5305d96bb29fc98b6a23a4005ac495b0706a929c41c5a9"
- 
+let version = "1.9.0"
+let checksum = "3e115c741526b8a7be1d5f8bf18df40310fa20501aee7fac810b7eda460afa5d"
+let checksum_c = "d34248be86d770474d07bc508416f1f034941895079750b43a1477c0bf351dbd"
+
 let package = Package(
     name: "FAISS",
     platforms: [

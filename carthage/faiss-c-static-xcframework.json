@@ -1,3 +1,4 @@
 {
-  "1.7.4": "https://github.com/eugenehp/faiss-mobile/releases/download/v1.7.4/faiss_c.xcframework.zip"
+  "1.7.4": "https://github.com/eugenehp/faiss-mobile/releases/download/v1.7.4/faiss_c.xcframework.zip",
+  "1.9.0": "https://github.com/eugenehp/faiss-mobile/releases/download/v1.9.0/faiss_c.xcframework.zip"
 }

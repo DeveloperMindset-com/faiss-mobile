@@ -8,6 +8,8 @@
 #pragma once
 
 #include <faiss/gpu/GpuIndexIVF.h>
+#include <faiss/impl/ScalarQuantizer.h>
+
 #include <memory>
 
 namespace faiss {
@@ -21,11 +23,9 @@ class IVFFlat;
 class GpuIndexFlat;
 
 struct GpuIndexIVFFlatConfig : public GpuIndexIVFConfig {
-    inline GpuIndexIVFFlatConfig() : interleavedLayout(true) {}
-
     /// Use the alternative memory layout for the IVF lists
     /// (currently the default)
-    bool interleavedLayout;
+    bool interleavedLayout = true;
 };
 
 /// Wrapper around the GPU implementation that looks like
@@ -86,6 +86,23 @@ class GpuIndexIVFFlat : public GpuIndexIVF {
 
     /// Trains the coarse quantizer based on the given vector data
     void train(idx_t n, const float* x) override;
+
+    void reconstruct_n(idx_t i0, idx_t n, float* out) const override;
+
+   protected:
+    /// Initialize appropriate index
+    void setIndex_(
+            GpuResources* resources,
+            int dim,
+            int nlist,
+            faiss::MetricType metric,
+            float metricArg,
+            bool useResidual,
+            /// Optional ScalarQuantizer
+            faiss::ScalarQuantizer* scalarQ,
+            bool interleavedLayout,
+            IndicesOptions indicesOptions,
+            MemorySpace space);
 
    protected:
     /// Our configuration options

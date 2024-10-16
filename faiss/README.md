@@ -16,7 +16,7 @@ The GPU implementation can accept input from either CPU or GPU memory. On a serv
 
 ## Installing
 
-Faiss comes with precompiled libraries for Anaconda in Python, see [faiss-cpu](https://anaconda.org/pytorch/faiss-cpu) and [faiss-gpu](https://anaconda.org/pytorch/faiss-gpu). The library is mostly implemented in C++, the only dependency is a [BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) implementation. Optional GPU support is provided via CUDA, and the Python interface is also optional. It compiles with cmake. See [INSTALL.md](INSTALL.md) for details.
+Faiss comes with precompiled libraries for Anaconda in Python, see [faiss-cpu](https://anaconda.org/pytorch/faiss-cpu) and [faiss-gpu](https://anaconda.org/pytorch/faiss-gpu). The library is mostly implemented in C++, the only dependency is a [BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms) implementation. Optional GPU support is provided via CUDA or AMD ROCm, and the Python interface is also optional. It compiles with cmake. See [INSTALL.md](INSTALL.md) for details.
 
 ## How Faiss works
 
@@ -49,11 +49,22 @@ The main authors of Faiss are:
 - [Lucas Hosseini](https://github.com/beauby) implemented the binary indexes and the build system
 - [Chengqi Deng](https://github.com/KinglittleQ) implemented NSG, NNdescent and much of the additive quantization code.
 - [Alexandr Guzhva](https://github.com/alexanderguzhva) many optimizations: SIMD, memory allocation and layout, fast decoding kernels for vector codecs, etc.
+- [Gergely Szilvasy](https://github.com/algoriddle) build system, benchmarking framework.
 
 ## Reference
 
-Reference to cite when you use Faiss in a research paper:
-
+References to cite when you use Faiss in a research paper:
+```
+@article{douze2024faiss,
+      title={The Faiss library},
+      author={Matthijs Douze and Alexandr Guzhva and Chengqi Deng and Jeff Johnson and Gergely Szilvasy and Pierre-Emmanuel Mazaré and Maria Lomeli and Lucas Hosseini and Hervé Jégou},
+      year={2024},
+      eprint={2401.08281},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
+For the GPU version of Faiss, please cite:
 ```
 @article{johnson2019billion,
   title={Billion-scale similarity search with {GPUs}},
@@ -78,4 +89,4 @@ You can report bugs, ask questions, etc.
 
 Faiss is MIT-licensed, refer to the [LICENSE file](https://github.com/facebookresearch/faiss/blob/main/LICENSE) in the top level directory.
 
-Copyright © Meta Platforms, Inc. See the [Terms of Use](https://opensource.fb.com/legal/terms/) and [Privacy Policy](https://opensource.fb.com/legal/privacy/) for this project.
+Copyright © Meta Platforms, Inc.

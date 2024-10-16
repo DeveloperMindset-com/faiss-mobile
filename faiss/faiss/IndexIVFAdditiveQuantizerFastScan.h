@@ -63,7 +63,9 @@ struct IndexIVFAdditiveQuantizerFastScan : IndexIVFFastScan {
             const IndexIVFAdditiveQuantizer& orig,
             int bbs = 32);
 
-    void train_residual(idx_t n, const float* x) override;
+    void train_encoder(idx_t n, const float* x, const idx_t* assign) override;
+
+    idx_t train_encoder_num_vectors() const override;
 
     void estimate_norm_scale(idx_t n, const float* x);
 
@@ -91,8 +93,7 @@ struct IndexIVFAdditiveQuantizerFastScan : IndexIVFFastScan {
     void compute_LUT(
             size_t n,
             const float* x,
-            const idx_t* coarse_ids,
-            const float* coarse_dis,
+            const CoarseQuantized& cq,
             AlignedTable<float>& dis_tables,
             AlignedTable<float>& biases) const override;
 

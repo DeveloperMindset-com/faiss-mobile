@@ -7,9 +7,11 @@ import numpy as np
 
 import faiss
 import unittest
+import sys
+import gc
 
 from faiss.contrib import datasets
-from faiss.contrib.evaluation import sort_range_res_2
+from faiss.contrib.evaluation import sort_range_res_2, check_ref_range_results
 
 faiss.omp_set_num_threads(4)
 
@@ -20,7 +22,7 @@ class TestSelector(unittest.TestCase):
     combinations as possible.
     """
 
-    def do_test_id_selector(self, index_key, id_selector_type="batch", mt=faiss.METRIC_L2):
+    def do_test_id_selector(self, index_key, id_selector_type="batch", mt=faiss.METRIC_L2, k=10):
         """ Verify that the id selector returns the subset of results that are
         members according to the IDSelector.
         Supports id_selector_type="batch", "bitmap", "range", "range_sorted", "and", "or", "xor"
@@ -28,7 +30,6 @@ class TestSelector(unittest.TestCase):
         ds = datasets.SyntheticDataset(32, 1000, 100, 20)
         index = faiss.index_factory(ds.d, index_key, mt)
         index.train(ds.get_train())
-        k = 10
 
         # reference result
         if "range" in id_selector_type:
@@ -101,17 +102,17 @@ class TestSelector(unittest.TestCase):
             sel = faiss.IDSelectorNot(faiss.IDSelectorBatch(inverse_subset))
         elif id_selector_type == "or":
             sel = faiss.IDSelectorOr(
-                faiss.IDSelectorBatch(lhs_subset), 
+                faiss.IDSelectorBatch(lhs_subset),
                 faiss.IDSelectorBatch(rhs_subset)
             )
         elif id_selector_type == "and":
             sel = faiss.IDSelectorAnd(
-                faiss.IDSelectorBatch(lhs_subset), 
+                faiss.IDSelectorBatch(lhs_subset),
                 faiss.IDSelectorBatch(rhs_subset)
             )
         elif id_selector_type == "xor":
             sel = faiss.IDSelectorXOr(
-                faiss.IDSelectorBatch(lhs_subset), 
+                faiss.IDSelectorBatch(lhs_subset),
                 faiss.IDSelectorBatch(rhs_subset)
             )
         else:
@@ -142,6 +143,16 @@ class TestSelector(unittest.TestCase):
 
     def test_IVFPQ(self):
         self.do_test_id_selector("IVF32,PQ4x4np")
+
+    def test_IVFPQfs(self):
+        self.do_test_id_selector("IVF32,PQ4x4fs")
+
+    def test_IVFPQfs_k1(self):
+        self.do_test_id_selector("IVF32,PQ4x4fs", k=1)
+
+    def test_IVFPQfs_k40(self):
+        # test reservoir codepath
+        self.do_test_id_selector("IVF32,PQ4x4fs", k=40)
 
     def test_IVFSQ(self):
         self.do_test_id_selector("IVF32,SQ8")
@@ -181,7 +192,7 @@ class TestSelector(unittest.TestCase):
 
     def test_Flat_id_not(self):
         self.do_test_id_selector("Flat", id_selector_type="not")
-    
+
     def test_Flat_id_or(self):
         self.do_test_id_selector("Flat", id_selector_type="or")
 
@@ -219,6 +230,59 @@ class TestSelector(unittest.TestCase):
 
     def test_HSNW(self):
         self.do_test_id_selector_weak("HNSW")
+
+    def test_idmap(self):
+        ds = datasets.SyntheticDataset(32, 100, 100, 20)
+        rs = np.random.RandomState(123)
+        ids = rs.choice(10000, size=100, replace=False)
+        mask = ids % 2 == 0
+        index = faiss.index_factory(ds.d, "IDMap,SQ8")
+        index.train(ds.get_train())
+
+        # ref result
+        index.add_with_ids(ds.get_database()[mask], ids[mask])
+        Dref, Iref = index.search(ds.get_queries(), 10)
+
+        # with selector
+        index.reset()
+        index.add_with_ids(ds.get_database(), ids)
+
+        valid_ids = ids[mask]
+        sel = faiss.IDSelectorTranslated(
+            index, faiss.IDSelectorBatch(valid_ids))
+
+        Dnew, Inew = index.search(
+            ds.get_queries(), 10,
+            params=faiss.SearchParameters(sel=sel)
+        )
+        np.testing.assert_array_equal(Iref, Inew)
+        np.testing.assert_array_almost_equal(Dref, Dnew, decimal=5)
+
+        # let the IDMap::search add the translation...
+        Dnew, Inew = index.search(
+            ds.get_queries(), 10,
+            params=faiss.SearchParameters(sel=faiss.IDSelectorBatch(valid_ids))
+        )
+        np.testing.assert_array_equal(Iref, Inew)
+        np.testing.assert_array_almost_equal(Dref, Dnew, decimal=5)
+
+    def test_bounds(self):
+        # https://github.com/facebookresearch/faiss/issues/3156
+        d = 64  # dimension
+        nb = 100000  # database size
+        xb = np.random.random((nb, d))
+        index_ip = faiss.IndexFlatIP(d)
+        index_ip.add(xb)
+        index_l2 = faiss.IndexFlatIP(d)
+        index_l2.add(xb)
+
+        out_of_bounds_id = nb + 15  # + 14 or lower will work fine
+        id_selector = faiss.IDSelectorArray([out_of_bounds_id])
+        search_params = faiss.SearchParameters(sel=id_selector)
+
+        # ignores out of bound, does not crash
+        distances, indices = index_ip.search(xb[:2], k=3, params=search_params)
+        distances, indices = index_l2.search(xb[:2], k=3, params=search_params)
 
 
 class TestSearchParams(unittest.TestCase):
@@ -311,6 +375,28 @@ class TestSearchParams(unittest.TestCase):
             if stats.ndis < target_ndis:
                 np.testing.assert_equal(I0[q], Iq[0])
 
+    def test_ownership(self):
+        # see https://github.com/facebookresearch/faiss/issues/2996
+        subset = np.arange(0, 50)
+        sel = faiss.IDSelectorBatch(subset)
+        self.assertTrue(sel.this.own())
+        params = faiss.SearchParameters(sel=sel)
+        self.assertTrue(sel.this.own())  # otherwise mem leak!
+        # this is a somewhat fragile test because it assumes the
+        # gc decreases refcounts immediately.
+        prev_count = sys.getrefcount(sel)
+        del params
+        new_count = sys.getrefcount(sel)
+        self.assertEqual(new_count, prev_count - 1)
+
+        # check for other objects as well
+        sel1 = faiss.IDSelectorBatch([1, 2, 3])
+        sel2 = faiss.IDSelectorBatch([4, 5, 6])
+        sel = faiss.IDSelectorAnd(sel1, sel2)
+        # make storage is still managed by python
+        self.assertTrue(sel1.this.own())
+        self.assertTrue(sel2.this.own())
+
 
 class TestSelectorCallback(unittest.TestCase):
 
@@ -379,5 +465,43 @@ class TestSortedIDSelectorRange(unittest.TestCase):
         sp = faiss.swig_ptr
         selr.find_sorted_ids_bounds(
             len(ids), sp(ids), sp(j01[:1]), sp(j01[1:]))
-        print(j01)
         assert j01[0] >= j01[1]
+
+
+class TestPrecomputed(unittest.TestCase):
+
+    def do_test_knn_and_range(self, factory, range=True):
+        ds = datasets.SyntheticDataset(32, 10000, 100, 20)
+        index = faiss.index_factory(ds.d, factory)
+        index.train(ds.get_train())
+        index.add(ds.get_database())
+        index.nprobe = 5
+        Dref, Iref = index.search(ds.get_queries(), 10)
+
+        Dq, Iq = index.quantizer.search(ds.get_queries(), index.nprobe)
+        Dnew, Inew = index.search_preassigned(ds.get_queries(), 10, Iq, Dq)
+        np.testing.assert_equal(Iref, Inew)
+        np.testing.assert_allclose(Dref, Dnew, atol=1e-5)
+
+        if range:
+            r2 = float(np.median(Dref[:, 5]))
+            Lref, Dref, Iref = index.range_search(ds.get_queries(), r2)
+            assert Lref.size > 10   # make sure there is something to test...
+
+            Lnew, Dnew, Inew = index.range_search_preassigned(ds.get_queries(), r2, Iq, Dq)
+            check_ref_range_results(
+                Lref, Dref, Iref,
+                Lnew, Dnew, Inew
+            )
+
+    def test_knn_and_range_Flat(self):
+        self.do_test_knn_and_range("IVF32,Flat")
+
+    def test_knn_and_range_SQ(self):
+        self.do_test_knn_and_range("IVF32,SQ8")
+
+    def test_knn_and_range_PQ(self):
+        self.do_test_knn_and_range("IVF32,PQ8x4np")
+
+    def test_knn_and_range_FS(self):
+        self.do_test_knn_and_range("IVF32,PQ8x4fs", range=False)

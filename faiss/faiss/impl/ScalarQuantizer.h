@@ -32,6 +32,9 @@ struct ScalarQuantizer : Quantizer {
         QT_fp16,
         QT_8bit_direct, ///< fast indexing of uint8s
         QT_6bit,        ///< 6 bits per component
+        QT_bf16,
+        QT_8bit_direct_signed, ///< fast indexing of signed int8s ranging from
+                               ///< [-128 to 127]
     };
 
     QuantizerType qtype = QT_8bit;
@@ -64,14 +67,6 @@ struct ScalarQuantizer : Quantizer {
     void set_derived_sizes();
 
     void train(size_t n, const float* x) override;
-
-    /// Used by an IVF index to train based on the residuals
-    void train_residual(
-            size_t n,
-            const float* x,
-            Index* quantizer,
-            bool by_residual,
-            bool verbose);
 
     /** Encode a set of vectors
      *

@@ -7,3 +7,4 @@ package-lock.json
 logs
 dist/openmp.xcframework
 /.build
+/dist

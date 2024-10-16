@@ -6,6 +6,7 @@
  */
 
 #include <faiss/IndexFlat.h>
+#include <faiss/gpu/GpuIndex.h>
 #include <faiss/gpu/GpuIndexFlat.h>
 #include <faiss/gpu/GpuResources.h>
 #include <faiss/gpu/impl/IndexUtils.h>
@@ -16,6 +17,10 @@
 #include <faiss/gpu/utils/CopyUtils.cuh>
 #include <faiss/gpu/utils/Float16.cuh>
 #include <limits>
+
+#if defined USE_NVIDIA_RAFT
+#include <faiss/gpu/impl/RaftFlatIndex.cuh>
+#endif
 
 namespace faiss {
 namespace gpu {
@@ -67,11 +72,7 @@ GpuIndexFlat::GpuIndexFlat(
     this->is_trained = true;
 
     // Construct index
-    data_.reset(new FlatIndex(
-            resources_.get(),
-            dims,
-            flatConfig_.useFloat16,
-            config_.memorySpace));
+    resetIndex_(dims);
 }
 
 GpuIndexFlat::GpuIndexFlat(
@@ -86,14 +87,35 @@ GpuIndexFlat::GpuIndexFlat(
     this->is_trained = true;
 
     // Construct index
-    data_.reset(new FlatIndex(
-            resources_.get(),
-            dims,
-            flatConfig_.useFloat16,
-            config_.memorySpace));
+    resetIndex_(dims);
 }
 
 GpuIndexFlat::~GpuIndexFlat() {}
+
+void GpuIndexFlat::resetIndex_(int dims) {
+#if defined USE_NVIDIA_RAFT
+
+    if (should_use_raft(config_)) {
+        data_.reset(new RaftFlatIndex(
+                resources_.get(),
+                dims,
+                flatConfig_.useFloat16,
+                config_.memorySpace));
+    } else
+#else
+    if (should_use_raft(config_)) {
+        FAISS_THROW_MSG(
+                "RAFT has not been compiled into the current version so it cannot be used.");
+    } else
+#endif
+    {
+        data_.reset(new FlatIndex(
+                resources_.get(),
+                dims,
+                flatConfig_.useFloat16,
+                config_.memorySpace));
+    }
+}
 
 void GpuIndexFlat::copyFrom(const faiss::IndexFlat* index) {
     DeviceScope scope(config_.device);
@@ -101,11 +123,7 @@ void GpuIndexFlat::copyFrom(const faiss::IndexFlat* index) {
     GpuIndex::copyFrom(index);
 
     data_.reset();
-    data_.reset(new FlatIndex(
-            resources_.get(),
-            this->d,
-            flatConfig_.useFloat16,
-            config_.memorySpace));
+    resetIndex_(this->d);
 
     // The index could be empty
     if (index->ntotal > 0) {

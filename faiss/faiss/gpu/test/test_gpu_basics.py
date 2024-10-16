@@ -11,6 +11,7 @@ import faiss
 import random
 from common_faiss_tests import get_dataset_2
 
+
 class ReferencedObject(unittest.TestCase):
 
     d = 16
@@ -225,6 +226,14 @@ def make_t(num, d, clamp=False, seed=None):
 
 class TestKnn(unittest.TestCase):
     def test_input_types(self):
+        self.do_test_input_types(0, 0)
+
+    def test_input_types_tiling(self):
+        self.do_test_input_types(0, 500)
+        self.do_test_input_types(1000, 0)
+        self.do_test_input_types(1000, 500)
+
+    def do_test_input_types(self, vectorsMemoryLimit, queriesMemoryLimit):
         d = 33
         k = 5
         nb = 1000
@@ -243,6 +252,8 @@ class TestKnn(unittest.TestCase):
         out_d = np.empty((nq, k), dtype=np.float32)
         out_i = np.empty((nq, k), dtype=np.int64)
 
+        gpu_id = random.randrange(0, faiss.get_num_gpus())
+
         # Try f32 data/queries, i64 out indices
         params = faiss.GpuDistanceParams()
         params.k = k
@@ -253,12 +264,27 @@ class TestKnn(unittest.TestCase):
         params.numQueries = nq
         params.outDistances = faiss.swig_ptr(out_d)
         params.outIndices = faiss.swig_ptr(out_i)
-        params.device = random.randrange(0, faiss.get_num_gpus())
+        params.device = gpu_id
 
-        faiss.bfKnn(res, params)
+        if vectorsMemoryLimit > 0 or queriesMemoryLimit > 0:
+            faiss.bfKnn_tiling(
+                res,
+                params,
+                vectorsMemoryLimit,
+                queriesMemoryLimit)
+        else:
+            faiss.bfKnn(res, params)
 
-        self.assertTrue(np.allclose(ref_d, out_d, atol=1e-5))
-        self.assertGreaterEqual((out_i == ref_i).sum(), ref_i.size)
+        np.testing.assert_allclose(ref_d, out_d, atol=1e-5)
+        np.testing.assert_array_equal(out_i, ref_i)
+
+        faiss.knn_gpu(
+            res, qs, xs, k, out_d, out_i, device=gpu_id,
+            vectorsMemoryLimit=vectorsMemoryLimit,
+            queriesMemoryLimit=queriesMemoryLimit)
+
+        np.testing.assert_allclose(ref_d, out_d, atol=1e-5)
+        np.testing.assert_array_equal(out_i, ref_i)
 
         # Try int32 out indices
         out_i32 = np.empty((nq, k), dtype=np.int32)
@@ -266,7 +292,9 @@ class TestKnn(unittest.TestCase):
         params.outIndicesType = faiss.IndicesDataType_I32
 
         faiss.bfKnn(res, params)
-        self.assertEqual((out_i32 == ref_i).sum(), ref_i.size)
+
+        np.testing.assert_allclose(ref_d, out_d, atol=1e-5)
+        np.testing.assert_array_equal(out_i32, ref_i)
 
         # Try float16 data/queries, i64 out indices
         xs_f16 = xs.astype(np.float16)
@@ -294,7 +322,7 @@ class TestKnn(unittest.TestCase):
         faiss.bfKnn(res, params)
 
         self.assertGreaterEqual((out_i_f16 == ref_i_f16).sum(), ref_i_f16.size - 5)
-        self.assertTrue(np.allclose(ref_d_f16, out_d_f16, atol = 2e-3))
+        np.testing.assert_allclose(ref_d_f16, out_d_f16, atol = 2e-3)
 
 class TestAllPairwiseDistance(unittest.TestCase):
     def test_dist(self):
@@ -355,7 +383,7 @@ class TestAllPairwiseDistance(unittest.TestCase):
 
             print('f32', np.abs(ref_d - out_d).max())
 
-            self.assertTrue(np.allclose(ref_d, out_d, atol=1e-5))
+            np.testing.assert_allclose(ref_d, out_d, atol=1e-5)
 
             # Try float16 data/queries
             xs_f16 = xs.astype(np.float16)
@@ -388,7 +416,7 @@ class TestAllPairwiseDistance(unittest.TestCase):
 
             print('f16', np.abs(ref_d_f16 - out_d_f16).max())
 
-            self.assertTrue(np.allclose(ref_d_f16, out_d_f16, atol = 4e-3))
+            np.testing.assert_allclose(ref_d_f16, out_d_f16, atol = 4e-3)
 
 
 
@@ -426,3 +454,9 @@ class TestResidualQuantizer(unittest.TestCase):
         self.assertTrue(0.9 * err_rq0 < err_rq1 < 1.1 * err_rq0)
 
         # np.testing.assert_array_equal(codes0, codes1)
+
+
+class TestGpuFlags(unittest.TestCase):
+
+    def test_gpu_flag(self):
+        assert "GPU" in faiss.get_compile_options().split()

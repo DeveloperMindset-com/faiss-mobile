@@ -232,13 +232,12 @@ class Tensor {
     }
 
     /// Returns a read/write view of a portion of our tensor.
-    __host__ __device__ inline detail::SubTensor<TensorType, Dim - 1, PtrTraits>
-    operator[](IndexT);
+    __host__ __device__ inline detail::
+            SubTensor<TensorType, Dim - 1, PtrTraits> operator[](IndexT);
 
     /// Returns a read/write view of a portion of our tensor (const).
     __host__ __device__ inline const detail::
-            SubTensor<TensorType, Dim - 1, PtrTraits>
-            operator[](IndexT) const;
+            SubTensor<TensorType, Dim - 1, PtrTraits> operator[](IndexT) const;
 
     /// Returns the size of a given dimension, `[0, Dim - 1]`. No bounds
     /// checking.
@@ -470,7 +469,7 @@ class SubTensor<TensorType, 0, PtrTraits> {
 
     /// Use the texture cache for reads
     __device__ inline typename TensorType::DataType ldg() const {
-#if __CUDA_ARCH__ >= 350
+#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
         return __ldg(data_);
 #else
         return *data_;
@@ -480,7 +479,7 @@ class SubTensor<TensorType, 0, PtrTraits> {
     /// Use the texture cache for reads; cast as a particular type
     template <typename T>
     __device__ inline T ldgAs() const {
-#if __CUDA_ARCH__ >= 350
+#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
         return __ldg(dataAs<T>());
 #else
         return as<T>();
@@ -606,7 +605,7 @@ class SubTensor {
 
     /// Use the texture cache for reads
     __device__ inline typename TensorType::DataType ldg() const {
-#if __CUDA_ARCH__ >= 350
+#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
         return __ldg(data_);
 #else
         return *data_;
@@ -616,7 +615,7 @@ class SubTensor {
     /// Use the texture cache for reads; cast as a particular type
     template <typename T>
     __device__ inline T ldgAs() const {
-#if __CUDA_ARCH__ >= 350
+#if __CUDA_ARCH__ >= 350 || defined(USE_AMD_ROCM)
         return __ldg(dataAs<T>());
 #else
         return as<T>();
