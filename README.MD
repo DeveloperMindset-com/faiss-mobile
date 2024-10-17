@@ -43,8 +43,8 @@ Modern machine learning tools focus on the server side or desktop solutions, few
 Run `./faiss.sh` and it will create `dist/faiss.xcframework` that you can use in your Xcode project.
 
 ## faiss.xcframework
-
-Once the compilation is done, you'll have XCframework created with the files below:
+<details>
+<summary>Once the compilation is done, you'll have XCframework created with the files below</summary>
 
 ```shell
 tree dist/faiss.xcframework -P '*.a'
@@ -164,6 +164,7 @@ dist/faiss.xcframework
 
 106 directories, 7 files
 ```
+</details>
 
 ## faiss_c.xcframework
 
