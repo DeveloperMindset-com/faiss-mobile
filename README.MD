@@ -373,6 +373,7 @@ dist/faiss_c.xcframework
 29 directories, 169 files
 ```
 </details>
+
 ## Distribution
 
 This package is available using following package managers.
