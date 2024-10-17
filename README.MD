@@ -167,8 +167,8 @@ dist/faiss.xcframework
 </details>
 
 ## faiss_c.xcframework
-
-A C only version, without C++ dependency is inside `faiss_c.xcframework`.
+<details>
+<summary>A C only version, without C++ dependency is inside `faiss_c.xcframework`</summary>
 
 ```shell
 dist/faiss_c.xcframework
@@ -372,7 +372,7 @@ dist/faiss_c.xcframework
 
 29 directories, 169 files
 ```
-
+</details>
 ## Distribution
 
 This package is available using following package managers.
