@@ -440,7 +440,7 @@ Contributions are welcome, feel free to submit an issue or open a pull request.
 
 [MIT](./LICENSE)
 
-Copyright © 2023-2025 [Eugene Hauptmann](http://twitter.com/eugenehp)
+Copyright © 2023-2026 [Eugene Hauptmann](http://linkedin.com/in/eugenehp)
 
 ## Legal
 
