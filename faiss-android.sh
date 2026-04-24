@@ -69,11 +69,17 @@ function download_openblas() {
 
 function build_openblas() {
     ABI=$1
-    print "Building OpenBLAS for $ABI"
-
     OPENBLAS_SRC="$ROOT/$BUILD/OpenBLAS"
     OPENBLAS_BUILD="$ROOT/$BUILD/openblas/$ABI"
     OPENBLAS_INSTALL="$ROOT/$BUILD/openblas/install/$ABI"
+
+    # Skip if already built (e.g. from cache)
+    if [ -f "$OPENBLAS_INSTALL/lib/libopenblas.a" ]; then
+        print "OpenBLAS for $ABI already built, skipping"
+        return
+    fi
+
+    print "Building OpenBLAS for $ABI"
 
     rm -rf "$OPENBLAS_BUILD"
     mkdir -p "$OPENBLAS_BUILD"
@@ -250,26 +256,27 @@ function build() {
 }
 
 # parse arguments
+POSITIONAL=()
 for arg in "$@"; do
     case $arg in
         --version=*)
             VERSION="${arg#*=}"
-            shift
             ;;
         --abi=*)
             ABIS=("${arg#*=}")
-            shift
             ;;
         --ndk=*)
             NDK="${arg#*=}"
             NDK_TOOLCHAIN="$NDK/build/cmake/android.toolchain.cmake"
-            shift
+            ;;
+        *)
+            POSITIONAL+=("$arg")
             ;;
     esac
 done
 
 # start CLI
-option="${1}"
+option="${POSITIONAL[0]}"
 
 case ${option} in
 "build")

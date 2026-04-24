@@ -15,6 +15,7 @@ on:
 
 env:
   FAISS_VERSION: '1.14.1'
+  NDK_VERSION: '27.2.12479018'
 
 jobs:
   build-apple:
@@ -71,16 +72,30 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up NDK
-        uses: android-actions/setup-android@v3
+      - name: Cache NDK
+        id: cache-ndk
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/lib/android/sdk/ndk/${{ env.NDK_VERSION }}
+          key: ndk-${{ env.NDK_VERSION }}
+
+      - name: Install NDK
+        if: steps.cache-ndk.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;${{ env.NDK_VERSION }}"
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+        run: sudo apt-get update && sudo apt-get install -y ninja-build
+
+      - name: Cache OpenBLAS build
+        id: cache-openblas
+        uses: actions/cache@v4
+        with:
+          path: build-android/openblas/install/${{ matrix.abi }}
+          key: openblas-0.3.28-${{ matrix.abi }}-ndk${{ env.NDK_VERSION }}
 
       - name: Build FAISS for ${{ matrix.abi }}
-        run: ./faiss-android.sh build --abi=${{ matrix.abi }}
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_ROOT }}
+        run: ./faiss-android.sh build --abi=${{ matrix.abi }} --ndk=$ANDROID_HOME/ndk/${{ env.NDK_VERSION }}
 
       - name: Upload JNI library
         uses: actions/upload-artifact@v4
@@ -99,18 +114,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: android-jni-*
-          path: dist-android/jni/
+          path: collected-jni/
 
       - name: Restructure JNI directories
         run: |
-          cd dist-android/jni
-          for dir in android-jni-*; do
-            abi="${dir#android-jni-}"
-            if [ -d "$dir" ] && [ "$dir" != "$abi" ]; then
-              mv "$dir" "$abi"
-            fi
+          mkdir -p dist-android/jni
+          for dir in collected-jni/android-jni-*; do
+            abi=$(basename "$dir" | sed 's/android-jni-//')
+            mv "$dir" "dist-android/jni/$abi"
           done
-          ls -R .
+          ls -R dist-android/jni/
 
       - name: Compile Java wrapper
         run: |
@@ -119,16 +132,11 @@ jobs:
             $(find android/java -name "*.java")
           cd dist-android/aar/classes
           jar cf ../classes.jar .
-          cd ../../..
 
       - name: Create AAR
         run: |
           AAR_DIR=dist-android/aar
-
-          # Copy JNI libs
           cp -r dist-android/jni "$AAR_DIR/jni"
-
-          # Create manifest
           cat > "$AAR_DIR/AndroidManifest.xml" << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -136,8 +144,6 @@ jobs:
               <uses-sdk android:minSdkVersion="24" />
           </manifest>
           EOF
-
-          # Package
           cd "$AAR_DIR"
           zip -r "$GITHUB_WORKSPACE/dist-android/faiss-android.aar" \
             AndroidManifest.xml classes.jar jni/
@@ -168,8 +174,7 @@ jobs:
           mkdir -p release
           cp artifacts/faiss-xcframework/faiss.xcframework.zip release/
           cp artifacts/faiss-c-xcframework/faiss_c.xcframework.zip release/
-          cp artifacts/apple-checksums/dist/*.sha256 release/ 2>/dev/null || \
-            cp artifacts/apple-checksums/*.sha256 release/ 2>/dev/null || true
+          find artifacts/apple-checksums -name "*.sha256" -exec cp {} release/ \;
           cp artifacts/faiss-android-aar/faiss-android.aar release/
           ls -lh release/
 
