@@ -6,7 +6,7 @@ OPENMP_XCFRAMEWORK="openmp.xcframework"
 
 NAME="faiss"
 NAME_C="faiss_c"
-VERSION="1.9.0"
+VERSION="1.14.1"
 DIST="dist"
 BUILD="build"
 BUILD_SHARED_LIBS=OFF
