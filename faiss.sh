@@ -78,17 +78,8 @@ function download() {
     mkdir -p $DIST
     mkdir -p $BUILD
 
-    print "Downloading OpenMP source code"
-    FILENAME="v$VERSION.tar.gz"
-    curl -L -O "https://github.com/facebookresearch/$NAME/archive/refs/tags/$FILENAME"
-
-    # remove the folder if it already exists
-    if [ -d "$NAME" ]; then rm -Rf $NAME; fi
-
-    mkdir $NAME
-    tar xf $FILENAME --strip-components=1 -C $NAME
-    rm -rf "$FILENAME"
-    rm -rf "$FILENAME.*"
+    print "Initializing FAISS submodule"
+    git submodule update --init --recursive
 
     print "Patching $NAME_C in $NAME/c_api"
     patch "$ROOT/$NAME/c_api/CMakeLists.txt" -i ./extra/CMakeLists.patch
