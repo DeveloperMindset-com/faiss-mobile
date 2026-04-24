@@ -8,6 +8,8 @@ logs
 dist/openmp.xcframework
 /.build
 /dist
+/dist-android
+/build-android
 *.xcuserstate
 .idea/
 .vscode/

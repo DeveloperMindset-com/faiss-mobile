@@ -1,6 +1,6 @@
 # FAISS Mobile
 
-This library provides means to compile and distribute FAISS library for Apple platforms (iOS, macOS, tvOS, watchOS, visionOS).
+This library provides means to compile and distribute FAISS library for mobile and embedded platforms (iOS, macOS, tvOS, watchOS, visionOS, Android).
 
 [FAISS](https://github.com/facebookresearch/faiss) is a library — developed by Facebook AI — that enables efficient similarity search. So, given a set of vectors, we can index them using Faiss — then using another vector (the query vector), we search for the most similar vectors within the index.
 
@@ -19,6 +19,7 @@ Latest supported version of FAISS is [1.14.1](https://github.com/facebookresearc
 - macOS
 - visionOS
 - visionOS Simulator
+- Android (arm64-v8a, armeabi-v7a, x86_64, x86)
 
 ## Requirements
 
@@ -38,11 +39,17 @@ Latest supported version of FAISS is [1.14.1](https://github.com/facebookresearc
 
 ## Why
 
-Modern machine learning tools focus on the server side or desktop solutions, few of them optimise their code bases for mobile, this repository is a structured way to get the FAISS source code compiled and distributed to iOS developers.
+Modern machine learning tools focus on the server side or desktop solutions, few of them optimise their code bases for mobile, this repository is a structured way to get the FAISS source code compiled and distributed to mobile developers.
 
 ## Getting started
 
-Run `./faiss.sh` and it will create `dist/faiss.xcframework` that you can use in your Xcode project.
+### Apple platforms
+
+Run `./faiss.sh build` and it will create `dist/faiss.xcframework` that you can use in your Xcode project.
+
+### Android
+
+Run `./faiss-android.sh build` and it will create `dist-android/faiss-android.aar` and JNI libraries for all ABIs. See [android/README.md](/android/README.md) for details.
 
 ## faiss.xcframework
 <details>
@@ -435,6 +442,7 @@ To release a draft:
 - `FAISS-iOS-Objective-C` [read more](/examples/FAISS-iOS-Objective-C/README.md).
 - `FAISS-Mac-Swift` [read more](/examples/FAISS-Mac-Swift/README.md).
 - `FAISS-iOS-Swift` [read more](/examples/FAISS-iOS-Swift/README.md).
+- `FAISS-Android` [read more](/examples/FAISS-Android/README.md).
 
 ## Contributing
 

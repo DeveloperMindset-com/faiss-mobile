@@ -1,0 +1,223 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create a GitHub release'
+        type: boolean
+        default: false
+
+env:
+  FAISS_VERSION: '1.14.1'
+
+jobs:
+  build-apple:
+    name: Build Apple platforms
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Install dependencies
+        run: brew install cmake tree node
+
+      - name: Build xcframeworks
+        run: ./faiss.sh build
+
+      - name: List output
+        run: |
+          ls -lh dist/*.zip
+          cat dist/faiss.xcframework.sha256
+          cat dist/faiss_c.xcframework.sha256
+
+      - name: Upload faiss.xcframework
+        uses: actions/upload-artifact@v4
+        with:
+          name: faiss-xcframework
+          path: dist/faiss.xcframework.zip
+
+      - name: Upload faiss_c.xcframework
+        uses: actions/upload-artifact@v4
+        with:
+          name: faiss-c-xcframework
+          path: dist/faiss_c.xcframework.zip
+
+      - name: Upload checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: apple-checksums
+          path: |
+            dist/faiss.xcframework.sha256
+            dist/faiss_c.xcframework.sha256
+
+  build-android:
+    name: Build Android (${{ matrix.abi }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+
+      - name: Build FAISS for ${{ matrix.abi }}
+        run: ./faiss-android.sh build --abi=${{ matrix.abi }}
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_ROOT }}
+
+      - name: Upload JNI library
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-jni-${{ matrix.abi }}
+          path: dist-android/jni/${{ matrix.abi }}/
+
+  package-android:
+    name: Package Android AAR
+    runs-on: ubuntu-latest
+    needs: build-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all JNI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: android-jni-*
+          path: dist-android/jni/
+
+      - name: Restructure JNI directories
+        run: |
+          cd dist-android/jni
+          for dir in android-jni-*; do
+            abi="${dir#android-jni-}"
+            if [ -d "$dir" ] && [ "$dir" != "$abi" ]; then
+              mv "$dir" "$abi"
+            fi
+          done
+          ls -R .
+
+      - name: Compile Java wrapper
+        run: |
+          mkdir -p dist-android/aar/classes
+          javac -source 8 -target 8 -d dist-android/aar/classes \
+            $(find android/java -name "*.java")
+          cd dist-android/aar/classes
+          jar cf ../classes.jar .
+          cd ../../..
+
+      - name: Create AAR
+        run: |
+          AAR_DIR=dist-android/aar
+
+          # Copy JNI libs
+          cp -r dist-android/jni "$AAR_DIR/jni"
+
+          # Create manifest
+          cat > "$AAR_DIR/AndroidManifest.xml" << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+              package="com.developermindset.faiss">
+              <uses-sdk android:minSdkVersion="24" />
+          </manifest>
+          EOF
+
+          # Package
+          cd "$AAR_DIR"
+          zip -r "$GITHUB_WORKSPACE/dist-android/faiss-android.aar" \
+            AndroidManifest.xml classes.jar jni/
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: faiss-android-aar
+          path: dist-android/faiss-android.aar
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-apple, package-android]
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release)
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          cp artifacts/faiss-xcframework/faiss.xcframework.zip release/
+          cp artifacts/faiss-c-xcframework/faiss_c.xcframework.zip release/
+          cp artifacts/apple-checksums/dist/*.sha256 release/ 2>/dev/null || \
+            cp artifacts/apple-checksums/*.sha256 release/ 2>/dev/null || true
+          cp artifacts/faiss-android-aar/faiss-android.aar release/
+          ls -lh release/
+
+      - name: Read checksums
+        id: checksums
+        run: |
+          CHECKSUM=$(cat release/faiss.xcframework.sha256 2>/dev/null || echo "N/A")
+          CHECKSUM_C=$(cat release/faiss_c.xcframework.sha256 2>/dev/null || echo "N/A")
+          echo "faiss=$CHECKSUM" >> "$GITHUB_OUTPUT"
+          echo "faiss_c=$CHECKSUM_C" >> "$GITHUB_OUTPUT"
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          draft: true
+          generate_release_notes: true
+          body: |
+            ## FAISS ${{ env.FAISS_VERSION }}
+
+            ### Apple platforms (xcframework)
+
+            | Artifact | Checksum (SHA-256) |
+            |----------|--------------------|
+            | `faiss.xcframework.zip` | `${{ steps.checksums.outputs.faiss }}` |
+            | `faiss_c.xcframework.zip` | `${{ steps.checksums.outputs.faiss_c }}` |
+
+            #### Swift Package Manager
+            ```swift
+            .package(url: "https://github.com/DeveloperMindset-com/faiss-mobile.git", from: "${{ env.FAISS_VERSION }}")
+            ```
+
+            #### CocoaPods
+            ```ruby
+            pod 'FAISS', :git => 'https://github.com/DeveloperMindset-com/faiss-mobile.git', :tag => '${{ steps.version.outputs.version }}'
+            ```
+
+            ### Android
+
+            | Artifact | ABIs |
+            |----------|------|
+            | `faiss-android.aar` | arm64-v8a, armeabi-v7a, x86_64, x86 |
+
+          files: |
+            release/faiss.xcframework.zip
+            release/faiss_c.xcframework.zip
+            release/faiss-android.aar

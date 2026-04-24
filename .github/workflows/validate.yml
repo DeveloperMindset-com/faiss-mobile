@@ -1,0 +1,62 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  lint:
+    name: Lint & validate
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Check submodule is initialized
+        run: |
+          test -f faiss/CMakeLists.txt || (echo "FAISS submodule not initialized" && exit 1)
+
+      - name: Validate podspecs
+        run: |
+          pod lib lint FAISS.podspec --allow-warnings --no-build 2>/dev/null || \
+            echo "Podspec validation requires built frameworks — skipping full lint"
+          pod lib lint FAISS_C.podspec --allow-warnings --no-build 2>/dev/null || \
+            echo "Podspec validation requires built frameworks — skipping full lint"
+
+      - name: Validate Package.swift
+        run: swift package dump-package
+
+      - name: Check version consistency
+        run: |
+          FAISS_SH_VER=$(grep '^VERSION=' faiss.sh | cut -d'"' -f2)
+          PODSPEC_VER=$(grep 'version.*=' FAISS.podspec | head -1 | grep -o '"[^"]*"' | tr -d '"')
+          PODSPEC_C_VER=$(grep 'version.*=' FAISS_C.podspec | head -1 | grep -o '"[^"]*"' | tr -d '"')
+          PKG_VER=$(grep 'let version' Package.swift | grep -o '"[^"]*"' | tr -d '"')
+          ANDROID_VER=$(grep '^VERSION=' faiss-android.sh | cut -d'"' -f2)
+
+          echo "faiss.sh:          $FAISS_SH_VER"
+          echo "FAISS.podspec:     $PODSPEC_VER"
+          echo "FAISS_C.podspec:   $PODSPEC_C_VER"
+          echo "Package.swift:     $PKG_VER"
+          echo "faiss-android.sh:  $ANDROID_VER"
+
+          if [ "$FAISS_SH_VER" != "$PODSPEC_VER" ] || \
+             [ "$FAISS_SH_VER" != "$PODSPEC_C_VER" ] || \
+             [ "$FAISS_SH_VER" != "$PKG_VER" ] || \
+             [ "$FAISS_SH_VER" != "$ANDROID_VER" ]; then
+            echo "::error::Version mismatch detected!"
+            exit 1
+          fi
+
+          echo "All versions match: $FAISS_SH_VER"
+
+      - name: Check no stale GitHub URLs
+        run: |
+          if grep -r 'eugenehp/faiss-mobile' --include='*.json' --include='*.js' --include='*.podspec' --include='*.swift' .; then
+            echo "::error::Found stale eugenehp URLs — should be DeveloperMindset-com"
+            exit 1
+          fi
+          echo "No stale URLs found"
