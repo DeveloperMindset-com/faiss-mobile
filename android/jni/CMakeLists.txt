@@ -11,10 +11,14 @@ target_include_directories(faiss_jni PRIVATE
     ${FAISS_INSTALL_DIR}/include/faiss/c_api
 )
 
+# Link order matters: faiss_c wraps faiss, faiss needs openblas.
+# -lc++ is required because libfaiss.a is C++ and needs the C++ runtime.
 target_link_libraries(faiss_jni
     ${FAISS_INSTALL_DIR}/lib/libfaiss_c.a
     ${FAISS_INSTALL_DIR}/lib/libfaiss.a
     ${OPENBLAS_INSTALL_DIR}/lib/libopenblas.a
+    c++_static
+    c++abi
     log
     m
 )

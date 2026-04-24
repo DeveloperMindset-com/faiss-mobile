@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 NAME="faiss"
 NAME_C="faiss_c"
@@ -8,7 +9,7 @@ BUILD="build-android"
 CPU_CORES=$(nproc 2>/dev/null || sysctl -n hw.ncpu)
 OPENBLAS_VERSION="0.3.28"
 
-ABIS=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
+ABIS=("arm64-v8a" "x86_64" "x86")
 API_LEVEL=24
 
 ROOT=$PWD
@@ -81,6 +82,14 @@ function build_openblas() {
 
     print "Building OpenBLAS for $ABI"
 
+    # OpenBLAS requires a TARGET when cross-compiling
+    case $ABI in
+        arm64-v8a)    OPENBLAS_TARGET="ARMV8" ;;
+        armeabi-v7a)  OPENBLAS_TARGET="ARMV7" ;;
+        x86_64)       OPENBLAS_TARGET="ATOM" ;;
+        x86)          OPENBLAS_TARGET="ATOM" ;;
+    esac
+
     rm -rf "$OPENBLAS_BUILD"
     mkdir -p "$OPENBLAS_BUILD"
     mkdir -p "$OPENBLAS_INSTALL"
@@ -95,7 +104,9 @@ function build_openblas() {
         -DBUILD_SHARED_LIBS=OFF \
         -DBUILD_WITHOUT_LAPACK=OFF \
         -DNOFORTRAN=ON \
-        -DC_LAPACK=ON
+        -DC_LAPACK=ON \
+        -DTARGET=$OPENBLAS_TARGET \
+        -DBUILD_TESTING=OFF
 
     cmake --build "$OPENBLAS_BUILD" -j "$CPU_CORES"
     cmake --build "$OPENBLAS_BUILD" --target install
@@ -230,13 +241,11 @@ function single_abi() {
 
     print "Building all for $ABI"
 
-    (
-        build_openblas "$ABI"
-        configure_faiss "$ABI"
-        build_faiss "$ABI"
-        install_faiss "$ABI"
-        build_jni "$ABI"
-    ) > "$LOGS/android-$ABI.log" 2>&1
+    build_openblas "$ABI" 2>&1 | tee "$LOGS/android-$ABI-openblas.log"
+    configure_faiss "$ABI" 2>&1 | tee "$LOGS/android-$ABI-configure.log"
+    build_faiss "$ABI" 2>&1 | tee "$LOGS/android-$ABI-build.log"
+    install_faiss "$ABI" 2>&1 | tee "$LOGS/android-$ABI-install.log"
+    build_jni "$ABI" 2>&1 | tee "$LOGS/android-$ABI-jni.log"
 }
 
 function build() {

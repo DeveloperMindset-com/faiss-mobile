@@ -19,7 +19,7 @@ Latest supported version of FAISS is [1.14.1](https://github.com/facebookresearc
 - macOS
 - visionOS
 - visionOS Simulator
-- Android (arm64-v8a, armeabi-v7a, x86_64, x86)
+- Android (arm64-v8a, x86_64, x86)
 
 ## Requirements
 
