@@ -2,8 +2,9 @@
 import PackageDescription
 
 let version = "1.14.1"
-let checksum = "3e115c741526b8a7be1d5f8bf18df40310fa20501aee7fac810b7eda460afa5d"
-let checksum_c = "d34248be86d770474d07bc508416f1f034941895079750b43a1477c0bf351dbd"
+// checksums are updated automatically by ./faiss.sh build
+let checksum = "0000000000000000000000000000000000000000000000000000000000000000"
+let checksum_c = "0000000000000000000000000000000000000000000000000000000000000000"
 
 let package = Package(
     name: "FAISS",

@@ -8,3 +8,8 @@ logs
 dist/openmp.xcframework
 /.build
 /dist
+*.xcuserstate
+.idea/
+.vscode/
+*.swp
+*.swo

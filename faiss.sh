@@ -66,7 +66,6 @@ function replace() {
 }
 
 function clear() {
-    rm -rf "$ROOT/$NAME"
     rm -rf "$ROOT/$BUILD"
     rm -rf "$ROOT/$DIST"
 
@@ -80,9 +79,6 @@ function download() {
 
     print "Initializing FAISS submodule"
     git submodule update --init --recursive
-
-    print "Patching $NAME_C in $NAME/c_api"
-    patch "$ROOT/$NAME/c_api/CMakeLists.txt" -i ./extra/CMakeLists.patch
 
     cd $DIST
     curl -L -O $OPENMP_URL
@@ -189,11 +185,12 @@ function update() {
 
     # SPM via Package.swift
     replace 4 "let version = \"$VERSION\"" "./Package.swift"
-    replace 5 "let checksum = \"$CHECKSUM\"" "./Package.swift"
-    replace 6 "let checksum_c = \"$CHECKSUM_C\"" "./Package.swift"
+    replace 6 "let checksum = \"$CHECKSUM\"" "./Package.swift"
+    replace 7 "let checksum_c = \"$CHECKSUM_C\"" "./Package.swift"
 
-    # Cocoapods via FAISS.podspec
+    # Cocoapods via FAISS.podspec and FAISS_C.podspec
     replace 2 "  version              = \"$VERSION\"" "./FAISS.podspec"
+    replace 2 "  version              = \"$VERSION\"" "./FAISS_C.podspec"
 
     # Carthage via carthage/faiss-static-xcframework.json
     $NODE extra/update-carthage.js $VERSION

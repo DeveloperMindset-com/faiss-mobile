@@ -10,8 +10,6 @@ Pod::Spec.new do |s|
   s.source             = { :git => 'https://github.com/DeveloperMindset-com/faiss-mobile.git', :tag => "v#{version}" }
   s.license            = { :type => 'MIT', :file => 'LICENSE' }
 
-  s.platform           = :osx, '13.0'
-  s.platform           = :ios, '13.0'
   s.swift_version      = "5.9"
 
   s.prepare_command = <<-CMD
@@ -20,6 +18,8 @@ Pod::Spec.new do |s|
 
   s.ios.deployment_target         = "13.0"
   s.osx.deployment_target         = "13.0"
+  s.tvos.deployment_target        = "13.0"
+  s.watchos.deployment_target     = "6.0"
   s.visionos.deployment_target    = "1.0"
   s.vendored_frameworks           = "dist/faiss_c.xcframework"
   s.requires_arc                  = false

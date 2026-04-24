@@ -123,6 +123,23 @@ private func runFAISS() -> String {
 
         log += "Freeing index...\n"
         faiss_Index_free(index)
+        index = nil
+
+        // HNSW example — approximate nearest neighbor search (much faster than Flat)
+        log += "\n--- HNSW Index Example ---\n"
+        log += "Building an HNSW index...\n"
+        var hnswIndex: OpaquePointer?
+        try faissCheck(faiss_index_factory(&hnswIndex, d, "HNSW32", METRIC_L2))
+        try faissCheck(faiss_Index_add(hnswIndex, Int64(nb), xb))
+        log += "ntotal = \(faiss_Index_ntotal(hnswIndex))\n"
+
+        log += "Searching HNSW...\n"
+        var hnswLabels = [idx_t](repeating: 0, count: Int(k) * 5)
+        var hnswDistances = [Float](repeating: 0, count: Int(k) * 5)
+        try faissCheck(faiss_Index_search(hnswIndex, 5, xb, Int64(k), &hnswDistances, &hnswLabels))
+        log += formatResults(hnswLabels, hnswDistances, nq: 5, k: Int(k))
+
+        faiss_Index_free(hnswIndex)
         log += "Done.\n"
     } catch {
         log += "Error: \(error.localizedDescription)\n"

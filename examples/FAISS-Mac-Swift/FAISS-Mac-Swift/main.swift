@@ -133,4 +133,22 @@ faissCheck(faiss_write_index_fname(index, "example.index"))
 
 print("Freeing index...")
 faiss_Index_free(index)
+
+// HNSW example — approximate nearest neighbor search (much faster than Flat)
+print("\n--- HNSW Index Example ---")
+print("Building an HNSW index...")
+var hnswIndex: OpaquePointer?
+faissCheck(faiss_index_factory(&hnswIndex, d, "HNSW32", METRIC_L2))
+faissCheck(faiss_Index_add(hnswIndex, Int64(nb), xb))
+print("ntotal = \(faiss_Index_ntotal(hnswIndex))")
+
+print("Searching HNSW...")
+do {
+    var labels = [idx_t](repeating: 0, count: Int(k) * 5)
+    var distances = [Float](repeating: 0, count: Int(k) * 5)
+    faissCheck(faiss_Index_search(hnswIndex, 5, xb, Int64(k), &distances, &labels))
+    printResults(labels, distances, nq: 5, k: Int(k))
+}
+
+faiss_Index_free(hnswIndex)
 print("Done.")

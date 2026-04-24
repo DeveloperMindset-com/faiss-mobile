@@ -1,6 +1,6 @@
 # FAISS Mobile
 
-This library provides means to compile and distribute FAISS library for iOS.
+This library provides means to compile and distribute FAISS library for Apple platforms (iOS, macOS, tvOS, watchOS, visionOS).
 
 [FAISS](https://github.com/facebookresearch/faiss) is a library — developed by Facebook AI — that enables efficient similarity search. So, given a set of vectors, we can index them using Faiss — then using another vector (the query vector), we search for the most similar vectors within the index.
 

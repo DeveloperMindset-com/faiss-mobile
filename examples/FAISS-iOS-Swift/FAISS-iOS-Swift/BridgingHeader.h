@@ -3,6 +3,7 @@
 
 #include <AutoTune_c.h>
 #include <IndexFlat_c.h>
+#include <IndexHNSW_c.h>
 #include <Index_c.h>
 #include <clone_index_c.h>
 #include <error_c.h>
