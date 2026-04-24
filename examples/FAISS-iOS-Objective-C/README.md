@@ -64,5 +64,5 @@ Program ended with exit code: 0
 
 ## Screenshots
 
-![](/docs//assets/001-building-faiss-index-on-ios.png)
-![](/docs//assets/002-done-building-faiss-index-on-ios.png)
+![](/docs/assets/001-building-faiss-index-on-ios.png)
+![](/docs/assets/002-done-building-faiss-index-on-ios.png)

@@ -17,6 +17,8 @@ Latest supported version of FAISS is [1.9.0](https://github.com/facebookresearch
 - watchOS
 - watchOS Simulator
 - macOS
+- visionOS
+- visionOS Simulator
 
 ## Requirements
 
@@ -382,7 +384,7 @@ This package is available using following package managers.
 
 ### Swift Package Manager
 
-`./Pacakage.swift` points to remote release hosted on this GitHub repository.
+`./Package.swift` points to remote release hosted on this GitHub repository.
 Use [these](https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app) instructions to add this GitHub repository.
 
 SPM version points to both libraries `FAISS` in C++ and its C version `FAISS_C`.

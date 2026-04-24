@@ -34,10 +34,10 @@ PARALLEL=OFF # ON|OFF
 # SIMULATORARM64_WATCHOS
 # WATCHOS
 
-TARGETS=("13.0" "13.0" "13.0" "6.0" "6.0" "13.0" "13.0" "13.0")
-ARCHS=("arm64;arm64e" "arm64;arm64e;x86_64" "arm64;arm64e;x86_64" "armv7k;arm64_32" "i386" "arm64" "x86_64")
-PLATFORMS=("OS64" "SIMULATOR64" "MAC_UNIVERSAL" "WATCHOS" "SIMULATOR_WATCHOS" "TVOS" "SIMULATOR_TVOS")
-TRIPLES=("ios-arm64_arm64e" "ios-arm64_arm64e_x86_64-simulator" "macos-arm64_arm64e_x86_64" "watchos-arm64_32_armv7k" "watchos-i386-simulator" "tvos-arm64" "tvos-x86_64-simulator")
+TARGETS=("13.0" "13.0" "13.0" "6.0" "6.0" "13.0" "13.0" "1.0" "1.0")
+ARCHS=("arm64;arm64e" "arm64;arm64e;x86_64" "arm64;arm64e;x86_64" "armv7k;arm64_32" "i386" "arm64" "x86_64" "arm64" "arm64")
+PLATFORMS=("OS64" "SIMULATOR64" "MAC_UNIVERSAL" "WATCHOS" "SIMULATOR_WATCHOS" "TVOS" "SIMULATOR_TVOS" "VISIONOS" "SIMULATOR_VISIONOS")
+TRIPLES=("ios-arm64_arm64e" "ios-arm64_arm64e_x86_64-simulator" "macos-arm64_arm64e_x86_64" "watchos-arm64_32_armv7k" "watchos-i386-simulator" "tvos-arm64" "tvos-x86_64-simulator" "xros-arm64" "xros-arm64-simulator")
 
 ROOT=$PWD
 LOGS="$ROOT/logs"
@@ -80,7 +80,7 @@ function download() {
 
     print "Downloading OpenMP source code"
     FILENAME="v$VERSION.tar.gz"
-    wget "https://github.com/facebookresearch/$NAME/archive/refs/tags/$FILENAME"
+    curl -L -O "https://github.com/facebookresearch/$NAME/archive/refs/tags/$FILENAME"
 
     # remove the folder if it already exists
     if [ -d "$NAME" ]; then rm -Rf $NAME; fi
@@ -94,7 +94,7 @@ function download() {
     patch "$ROOT/$NAME/c_api/CMakeLists.txt" -i ./extra/CMakeLists.patch
 
     cd $DIST
-    wget $OPENMP_URL
+    curl -L -O $OPENMP_URL
     unzip "$OPENMP_XCFRAMEWORK.zip"
 
     rm -rf "$OPENMP_XCFRAMEWORK.zip"
@@ -103,7 +103,7 @@ function download() {
     print "Downloading ios.toolchain.cmake"
     cd extra
     rm -rf ios.toolchain.cmake
-    wget https://raw.githubusercontent.com/eugenehp/ios-cmake/master/ios.toolchain.cmake
+    curl -L -O https://raw.githubusercontent.com/eugenehp/ios-cmake/master/ios.toolchain.cmake
     cd $ROOT
 }
 
@@ -298,6 +298,16 @@ function release() {
 
     gh release view $TAG -w
 }
+
+# parse arguments
+for arg in "$@"; do
+    case $arg in
+        --version=*)
+            VERSION="${arg#*=}"
+            shift
+            ;;
+    esac
+done
 
 # start CLI
 option="${1}"
